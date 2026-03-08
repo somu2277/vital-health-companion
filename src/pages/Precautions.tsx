@@ -10,7 +10,8 @@ import { useI18n } from "@/hooks/useI18n";
 export default function Precautions() {
   const { user } = useAuth();
   const [generating, setGenerating] = useState(false);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const langMap: Record<string, string> = { en: "English", te: "Telugu", hi: "Hindi" };
 
   const { data: precautions, isLoading, refetch } = useQuery({
     queryKey: ["precautions"],
@@ -30,14 +31,24 @@ export default function Precautions() {
       const { data, error } = await supabase.functions.invoke("ai-health", {
         body: {
           action: "generate-precautions",
-          data: { diseases: diseases?.map(d => d.disease) || [], medicines: meds?.map(m => m.name) || [] },
+          data: {
+            diseases: diseases?.map(d => d.disease) || [],
+            medicines: meds?.map(m => m.name) || [],
+            language: langMap[locale],
+          },
         },
       });
       if (error || data?.error) throw new Error(data?.error || "Generation failed");
 
       const items = Array.isArray(data) ? data : [];
       const disease = diseases?.[0]?.disease || "General";
-      const inserts = items.map((p: string) => ({ user_id: user.id, precaution: p, disease }));
+      
+      // Handle both structured and flat format
+      const inserts = items.map((p: any) => ({
+        user_id: user.id,
+        precaution: typeof p === "string" ? p : `[${p.severity || "medium"}] ${p.category ? p.category + ": " : ""}${p.precaution}`,
+        disease,
+      }));
       if (inserts.length > 0) await supabase.from("precautions").insert(inserts);
       refetch();
       toast.success(t("precautions.generated"));
@@ -46,6 +57,12 @@ export default function Precautions() {
     } finally {
       setGenerating(false);
     }
+  };
+
+  const getSeverityColor = (text: string) => {
+    if (text.includes("[high]")) return "text-destructive";
+    if (text.includes("[medium]")) return "text-warning";
+    return "text-muted-foreground";
   };
 
   return (
@@ -67,9 +84,13 @@ export default function Precautions() {
         <div className="border border-border rounded-xl p-6 bg-card space-y-3">
           {precautions.map(p => (
             <div key={p.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-background">
-              <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+              <AlertTriangle className={`h-4 w-4 mt-0.5 shrink-0 ${
+                p.precaution.includes("[high]") ? "text-destructive" : "text-warning"
+              }`} />
               <div>
-                <p className="text-sm">{p.precaution}</p>
+                <p className={`text-sm ${getSeverityColor(p.precaution)}`}>
+                  {p.precaution.replace(/\[(high|medium|low)\]\s*/g, "")}
+                </p>
                 {p.disease && <p className="text-xs text-muted-foreground mt-1">{t("common.for")}: {p.disease}</p>}
               </div>
             </div>
