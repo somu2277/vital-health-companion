@@ -116,7 +116,8 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
         {aiLinks.map(link => <NavItem key={link.to} {...link} />)}
       </nav>
 
-      <div className="px-3 pb-4">
+      <div className="px-3 pb-4 space-y-1">
+        <NavItem to="/reminder-settings" icon={Bell} label={t("nav.reminderSettings")} />
         <NavItem to="/settings" icon={Settings} label={t("nav.settings")} />
       </div>
     </aside>

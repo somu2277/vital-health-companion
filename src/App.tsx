@@ -63,6 +63,8 @@ const App = () => (
                 <Route path="/health-risk" element={<HealthRiskScore />} />
                 <Route path="/medicine-interactions" element={<MedicineInteractions />} />
                 <Route path="/health-coach" element={<HealthCoach />} />
+                <Route path="/reminder-history" element={<ReminderHistory />} />
+                <Route path="/reminder-settings" element={<ReminderSettings />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
