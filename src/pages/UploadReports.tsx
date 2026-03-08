@@ -248,16 +248,25 @@ export default function UploadReports() {
       setStatus(t("upload.extracting"));
 
       let reportText = "";
+      let imageBase64: string | undefined;
+      let imageMimeType: string | undefined;
+
       if (file.type.startsWith("text/")) {
         reportText = await file.text();
       } else if (file.type.startsWith("image/")) {
+        // Convert image to base64 for vision-based AI analysis
+        setStatus(t("upload.extracting"));
+        imageBase64 = await fileToBase64(file);
+        imageMimeType = file.type;
+
+        // Also run OCR as supplementary text (non-blocking)
         try {
           reportText = await runOCR(file);
-          if (!reportText.trim()) {
-            reportText = `[Image uploaded: ${file.name}]. Could not extract text via OCR. Please analyze as a medical document image.`;
-          }
         } catch {
-          reportText = `[Image uploaded: ${file.name}]. OCR failed. Please analyze as a medical document image.`;
+          reportText = "";
+        }
+        if (!reportText.trim()) {
+          reportText = `Prescription image: ${file.name}`;
         }
       } else {
         reportText = `[Uploaded file: ${file.name}, type: ${file.type}, size: ${(file.size / 1024).toFixed(1)}KB]. Please analyze this medical document.`;
@@ -268,7 +277,7 @@ export default function UploadReports() {
 
       const { data: urlData } = supabase.storage.from("medical-reports").getPublicUrl(filePath);
 
-      await processReport(reportText, urlData.publicUrl);
+      await processReport(reportText, urlData.publicUrl, imageBase64, imageMimeType);
     } catch (err: any) {
       toast.error(err.message || "Upload failed");
     } finally {
