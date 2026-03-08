@@ -119,7 +119,17 @@
     "file": "File",
     "camera": "Camera",
     "text": "Text",
-    "link": "Link"
+    "link": "Link",
+    "confirmMedicines": "Confirm Extracted Medicines",
+    "reviewExtracted": "Review and confirm the medicines extracted from your prescription",
+    "needsReview": "Needs Review",
+    "medicineName": "Medicine Name",
+    "dosageLabel": "Dosage",
+    "frequencyLabel": "Frequency",
+    "durationLabel": "Duration",
+    "confirmAll": "Confirm All",
+    "reviewRequired": "Review required - some medicines need confirmation",
+    "warnings": "Warnings"
   },
   "assistant": {
     "title": "AI Health Assistant",
