@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Upload, Stethoscope, MapPin, MessageSquare, Search, Bell, Droplets, Moon, Footprints, HeartPulse, Pill, AlertTriangle, ClipboardList, Salad, ShieldAlert, Activity } from "lucide-react";
 import { Heart } from "lucide-react";
+import LiveHealthMetrics from "@/components/dashboard/LiveHealthMetrics";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
@@ -135,6 +136,9 @@ export default function Dashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* Live Health Metrics from Smartwatch */}
+      <LiveHealthMetrics />
 
       {/* My Health Section - only shown when health profile exists */}
       {hasHealthProfile && (

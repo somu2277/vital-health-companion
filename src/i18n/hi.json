@@ -407,5 +407,33 @@
     "carePlanReady": "देखभाल योजना तैयार",
     "dietReady": "आहार योजना तैयार",
     "precautionsReady": "सावधानियाँ तैयार"
+  },
+  "wearable": {
+    "smartwatch": "स्मार्टवॉच कनेक्शन",
+    "liveMetrics": "लाइव स्वास्थ्य मेट्रिक्स",
+    "heartRate": "हृदय गति",
+    "steps": "कदम",
+    "sleep": "नींद",
+    "calories": "कैलोरी",
+    "hours": "घंटे",
+    "goal": "लक्ष्य",
+    "notConnected": "कोई स्मार्टवॉच कनेक्ट नहीं",
+    "connectDesc": "रियल-टाइम स्वास्थ्य मेट्रिक्स सिंक करने के लिए स्मार्टवॉच कनेक्ट करें",
+    "connectSmartwatch": "स्मार्टवॉच कनेक्ट करें",
+    "connected": "स्मार्टवॉच सफलतापूर्वक कनेक्ट हुई!",
+    "disconnected": "स्मार्टवॉच डिस्कनेक्ट हुई",
+    "disconnect": "डिस्कनेक्ट",
+    "statusConnected": "स्मार्टवॉच कनेक्टेड",
+    "statusDisconnected": "कनेक्ट नहीं",
+    "syncingData": "हर 5 मिनट में डेटा सिंक हो रहा है",
+    "sync": "अभी सिंक करें",
+    "aiInsights": "AI अंतर्दृष्टि",
+    "hrWarning": "हृदय गति बढ़ी हुई",
+    "sleepWarning": "अनुशंसित नींद से कम",
+    "alerts": {
+      "highHR": "उच्च हृदय गति का पता चला",
+      "lowSleep": "कम नींद की अवधि",
+      "lowActivity": "कम दैनिक गतिविधि"
+    }
   }
 }

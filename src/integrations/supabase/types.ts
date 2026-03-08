@@ -284,6 +284,45 @@ export type Database = {
         }
         Relationships: []
       }
+      wearable_health_data: {
+        Row: {
+          calories: number | null
+          created_at: string | null
+          distance: number | null
+          heart_rate: number | null
+          id: string
+          recorded_at: string | null
+          sleep_hours: number | null
+          source: string | null
+          steps: number | null
+          user_id: string
+        }
+        Insert: {
+          calories?: number | null
+          created_at?: string | null
+          distance?: number | null
+          heart_rate?: number | null
+          id?: string
+          recorded_at?: string | null
+          sleep_hours?: number | null
+          source?: string | null
+          steps?: number | null
+          user_id: string
+        }
+        Update: {
+          calories?: number | null
+          created_at?: string | null
+          distance?: number | null
+          heart_rate?: number | null
+          id?: string
+          recorded_at?: string | null
+          sleep_hours?: number | null
+          source?: string | null
+          steps?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

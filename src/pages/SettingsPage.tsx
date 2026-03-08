@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Settings, Loader2, Moon, Sun, Bell, Shield } from "lucide-react";
+import { Settings, Loader2, Moon, Sun, Bell, Shield, Watch, Wifi, WifiOff } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/hooks/useI18n";
@@ -22,6 +22,19 @@ export default function SettingsPage() {
   const [gender, setGender] = useState(profile?.gender || "");
   const [location, setLocation] = useState(profile?.location || "");
   const [saving, setSaving] = useState(false);
+  const [connectingWatch, setConnectingWatch] = useState(false);
+
+  const { data: wearableStatus } = useQuery({
+    queryKey: ["wearable-data"],
+    queryFn: async () => {
+      const { data } = await supabase.functions.invoke("wearable-sync", {
+        body: { action: "get-latest", data: {} },
+      });
+      return data as { connected: boolean };
+    },
+  });
+
+  const watchConnected = wearableStatus?.connected;
 
   useEffect(() => {
     if (profile) {
@@ -150,6 +163,60 @@ export default function SettingsPage() {
         ) : (
           <p className="text-sm text-muted-foreground">{t("settings.noReminders")}</p>
         )}
+      </div>
+
+      {/* Smartwatch Connection */}
+      <div className="border border-border rounded-xl p-6 bg-card space-y-4">
+        <h2 className="font-semibold text-lg flex items-center gap-2">
+          <Watch className="h-5 w-5 text-primary" /> {t("wearable.smartwatch")}
+        </h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {watchConnected ? (
+              <Wifi className="h-5 w-5 text-green-500" />
+            ) : (
+              <WifiOff className="h-5 w-5 text-muted-foreground" />
+            )}
+            <div>
+              <p className="font-medium text-sm">
+                {watchConnected ? t("wearable.statusConnected") : t("wearable.statusDisconnected")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {watchConnected ? t("wearable.syncingData") : t("wearable.connectDesc")}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant={watchConnected ? "destructive" : "default"}
+            size="sm"
+            disabled={connectingWatch}
+            onClick={async () => {
+              setConnectingWatch(true);
+              try {
+                if (watchConnected) {
+                  await supabase.functions.invoke("wearable-sync", {
+                    body: { action: "disconnect", data: {} },
+                  });
+                  toast.success(t("wearable.disconnected"));
+                } else {
+                  await supabase.functions.invoke("wearable-sync", {
+                    body: { action: "sync-demo", data: {} },
+                  });
+                  toast.success(t("wearable.connected"));
+                }
+                queryClient.invalidateQueries({ queryKey: ["wearable-data"] });
+              } catch (err: any) {
+                toast.error(err.message);
+              } finally {
+                setConnectingWatch(false);
+              }
+            }}
+            className="gap-2"
+          >
+            {connectingWatch ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {watchConnected ? t("wearable.disconnect") : t("wearable.connectSmartwatch")}
+          </Button>
+        </div>
       </div>
 
       <div className="border border-border rounded-xl p-6 bg-card space-y-3">
