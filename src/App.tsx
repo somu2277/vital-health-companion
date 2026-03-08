@@ -23,6 +23,10 @@ import DiseaseStage from "./pages/DiseaseStage";
 import CarePlan from "./pages/CarePlan";
 import Precautions from "./pages/Precautions";
 import SettingsPage from "./pages/SettingsPage";
+import EmergencySOS from "./pages/EmergencySOS";
+import HealthRiskScore from "./pages/HealthRiskScore";
+import MedicineInteractions from "./pages/MedicineInteractions";
+import HealthCoach from "./pages/HealthCoach";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +57,10 @@ const App = () => (
                 <Route path="/care-plan" element={<CarePlan />} />
                 <Route path="/precautions" element={<Precautions />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/emergency" element={<EmergencySOS />} />
+                <Route path="/health-risk" element={<HealthRiskScore />} />
+                <Route path="/medicine-interactions" element={<MedicineInteractions />} />
+                <Route path="/health-coach" element={<HealthCoach />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

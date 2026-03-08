@@ -108,6 +108,11 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
           {t("nav.myHealth")} {!hasPrescriptions && <Lock className="h-3 w-3 inline ml-1" />}
         </p>
         {healthLinks.map(link => <NavItem key={link.to} {...link} disabled={!hasPrescriptions} />)}
+
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted px-4 mt-6 mb-2">
+          {t("nav.aiFeatures")}
+        </p>
+        {aiLinks.map(link => <NavItem key={link.to} {...link} />)}
       </nav>
 
       <div className="px-3 pb-4">
