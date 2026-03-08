@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function Precautions() {
   const { user } = useAuth();
   const [generating, setGenerating] = useState(false);
+  const { t } = useI18n();
 
   const { data: precautions, isLoading, refetch } = useQuery({
     queryKey: ["precautions"],
@@ -38,7 +40,7 @@ export default function Precautions() {
       const inserts = items.map((p: string) => ({ user_id: user.id, precaution: p, disease }));
       if (inserts.length > 0) await supabase.from("precautions").insert(inserts);
       refetch();
-      toast.success("Precautions generated!");
+      toast.success(t("precautions.generated"));
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -50,12 +52,12 @@ export default function Precautions() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Precautions</h1>
-          <p className="text-muted-foreground">Safety precautions based on your conditions</p>
+          <h1 className="text-3xl font-bold">{t("precautions.title")}</h1>
+          <p className="text-muted-foreground">{t("precautions.description")}</p>
         </div>
         <Button onClick={generatePrecautions} disabled={generating}>
           {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
-          Generate
+          {t("common.generate")}
         </Button>
       </div>
 
@@ -68,7 +70,7 @@ export default function Precautions() {
               <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm">{p.precaution}</p>
-                {p.disease && <p className="text-xs text-muted-foreground mt-1">For: {p.disease}</p>}
+                {p.disease && <p className="text-xs text-muted-foreground mt-1">{t("common.for")}: {p.disease}</p>}
               </div>
             </div>
           ))}
@@ -76,8 +78,8 @@ export default function Precautions() {
       ) : (
         <div className="border border-border rounded-xl p-12 bg-card flex flex-col items-center text-muted-foreground">
           <AlertTriangle className="h-12 w-12 mb-4 opacity-30" />
-          <p className="font-medium">No precautions yet</p>
-          <p className="text-sm mt-1">Precautions will be generated after uploading your medical reports</p>
+          <p className="font-medium">{t("precautions.noPrecautions")}</p>
+          <p className="text-sm mt-1">{t("precautions.noPrecautionsDesc")}</p>
         </div>
       )}
     </div>

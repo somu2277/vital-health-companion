@@ -1,12 +1,14 @@
-import { Clock, Loader2, Search, Pill, FileText, Brain } from "lucide-react";
+import { Loader2, Search, Pill, FileText, Brain } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function HistoryPage() {
   const [search, setSearch] = useState("");
+  const { t } = useI18n();
 
   const { data: reports, isLoading: reportsLoading } = useQuery({
     queryKey: ["reports-history"],
@@ -45,21 +47,21 @@ export default function HistoryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">History</h1>
-        <p className="text-muted-foreground">View your past uploads, medicines, and AI analyses</p>
+        <h1 className="text-3xl font-bold">{t("history.title")}</h1>
+        <p className="text-muted-foreground">{t("history.description")}</p>
       </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search history..."
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("history.searchPlaceholder")}
           className="w-full h-10 pl-10 pr-4 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
       </div>
 
       <Tabs defaultValue="reports">
         <TabsList className="grid grid-cols-3">
-          <TabsTrigger value="reports" className="gap-2"><FileText className="h-4 w-4" /> Reports ({reports?.length || 0})</TabsTrigger>
-          <TabsTrigger value="medicines" className="gap-2"><Pill className="h-4 w-4" /> Medicines ({medicines?.length || 0})</TabsTrigger>
-          <TabsTrigger value="analysis" className="gap-2"><Brain className="h-4 w-4" /> AI Analysis ({stages?.length || 0})</TabsTrigger>
+          <TabsTrigger value="reports" className="gap-2"><FileText className="h-4 w-4" /> {t("history.reports")} ({reports?.length || 0})</TabsTrigger>
+          <TabsTrigger value="medicines" className="gap-2"><Pill className="h-4 w-4" /> {t("nav.medicines")} ({medicines?.length || 0})</TabsTrigger>
+          <TabsTrigger value="analysis" className="gap-2"><Brain className="h-4 w-4" /> {t("history.aiAnalysis")} ({stages?.length || 0})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="reports" className="mt-4">
@@ -76,7 +78,7 @@ export default function HistoryPage() {
                   {r.summary && <p className="text-sm text-muted-foreground">{r.summary}</p>}
                   {r.report_text && (
                     <details className="mt-2">
-                      <summary className="text-xs text-primary cursor-pointer">View extracted text</summary>
+                      <summary className="text-xs text-primary cursor-pointer">{t("history.viewText")}</summary>
                       <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap max-h-32 overflow-y-auto">{r.report_text}</p>
                     </details>
                   )}
@@ -84,7 +86,7 @@ export default function HistoryPage() {
               ))}
             </div>
           ) : (
-            <EmptyState icon={FileText} title="No reports yet" subtitle="Your uploaded reports will appear here" />
+            <EmptyState icon={FileText} title={t("history.noReports")} subtitle={t("history.noReportsDesc")} />
           )}
         </TabsContent>
 
@@ -106,7 +108,7 @@ export default function HistoryPage() {
               ))}
             </div>
           ) : (
-            <EmptyState icon={Pill} title="No medicines yet" subtitle="Medicines extracted from uploads will appear here" />
+            <EmptyState icon={Pill} title={t("history.noMedicines")} subtitle={t("history.noMedicinesDesc")} />
           )}
         </TabsContent>
 
@@ -126,7 +128,7 @@ export default function HistoryPage() {
                       <div className="flex-1 bg-muted rounded-full h-2">
                         <div className="bg-primary h-2 rounded-full" style={{ width: `${s.confidence}%` }} />
                       </div>
-                      <span className="text-sm text-muted-foreground">{s.confidence}% confidence</span>
+                      <span className="text-sm text-muted-foreground">{s.confidence}% {t("history.confidence")}</span>
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground mt-2">{s.created_at ? format(new Date(s.created_at), "MMM d, yyyy") : ""}</p>
@@ -134,7 +136,7 @@ export default function HistoryPage() {
               ))}
             </div>
           ) : (
-            <EmptyState icon={Brain} title="No AI analysis yet" subtitle="Disease predictions and analyses will appear here" />
+            <EmptyState icon={Brain} title={t("history.noAnalysis")} subtitle={t("history.noAnalysisDesc")} />
           )}
         </TabsContent>
       </Tabs>

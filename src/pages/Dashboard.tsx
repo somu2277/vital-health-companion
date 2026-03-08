@@ -8,24 +8,26 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { toast } from "sonner";
-
-const quickActions = [
-  { to: "/upload", icon: Upload, label: "Upload Report", bg: "bg-feature-upload", iconColor: "text-feature-upload-icon" },
-  { to: "/find-doctors", icon: Stethoscope, label: "Find Doctor", bg: "bg-feature-doctor", iconColor: "text-feature-doctor-icon" },
-  { to: "/nearby", icon: MapPin, label: "Nearby Hospital", bg: "bg-feature-hospital", iconColor: "text-feature-hospital-icon" },
-  { to: "/assistant", icon: MessageSquare, label: "Ask AI", bg: "bg-feature-ai", iconColor: "text-feature-ai-icon" },
-  { to: "/symptoms", icon: Search, label: "Symptom Checker", bg: "bg-feature-symptom", iconColor: "text-feature-symptom-icon" },
-];
-
-const defaultReminders = [
-  { type: "water", icon: Droplets, message: "Drink a glass of water", color: "text-info" },
-  { type: "sleep", icon: Moon, message: "Time to prepare for bed", color: "text-feature-ai-icon" },
-  { type: "exercise", icon: Footprints, message: "Take a 10-minute walk", color: "text-success" },
-];
+import { useI18n } from "@/hooks/useI18n";
 
 export default function Dashboard() {
   const { profile, user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
+
+  const quickActions = [
+    { to: "/upload", icon: Upload, label: t("dashboard.uploadReport"), bg: "bg-feature-upload", iconColor: "text-feature-upload-icon" },
+    { to: "/find-doctors", icon: Stethoscope, label: t("dashboard.findDoctor"), bg: "bg-feature-doctor", iconColor: "text-feature-doctor-icon" },
+    { to: "/nearby", icon: MapPin, label: t("dashboard.nearbyHospital"), bg: "bg-feature-hospital", iconColor: "text-feature-hospital-icon" },
+    { to: "/assistant", icon: MessageSquare, label: t("dashboard.askAI"), bg: "bg-feature-ai", iconColor: "text-feature-ai-icon" },
+    { to: "/symptoms", icon: Search, label: t("dashboard.symptomChecker"), bg: "bg-feature-symptom", iconColor: "text-feature-symptom-icon" },
+  ];
+
+  const defaultReminders = [
+    { type: "water", icon: Droplets, message: t("dashboard.drinkWater"), color: "text-info" },
+    { type: "sleep", icon: Moon, message: t("dashboard.sleepReminder"), color: "text-feature-ai-icon" },
+    { type: "exercise", icon: Footprints, message: t("dashboard.walkReminder"), color: "text-success" },
+  ];
 
   const { data: reports } = useQuery({
     queryKey: ["reports"],
@@ -77,11 +79,11 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back, {profile?.name || "User"} 👋</h1>
-          <p className="text-muted-foreground mt-1">{profile?.location || "Your health dashboard"}</p>
+          <h1 className="text-3xl font-bold">{t("dashboard.welcome")}, {profile?.name || "User"} 👋</h1>
+          <p className="text-muted-foreground mt-1">{profile?.location || t("dashboard.healthDashboard")}</p>
         </div>
         <Button asChild>
-          <Link to="/upload" className="gap-2"><Upload className="h-4 w-4" /> Upload Report</Link>
+          <Link to="/upload" className="gap-2"><Upload className="h-4 w-4" /> {t("dashboard.uploadReport")}</Link>
         </Button>
       </div>
 
@@ -99,13 +101,12 @@ export default function Dashboard() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Health Overview */}
         <div className="md:col-span-2 border border-border rounded-xl p-6 bg-card">
           <div className="flex items-center gap-2 mb-1">
             <Heart className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Health Overview</h2>
+            <h2 className="text-lg font-semibold">{t("dashboard.healthOverview")}</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">Your recent health activity</p>
+          <p className="text-sm text-muted-foreground mb-4">{t("dashboard.recentActivity")}</p>
 
           {medicines && medicines.length > 0 ? (
             <div className="space-y-3">
@@ -125,46 +126,43 @@ export default function Dashboard() {
           ) : (
             <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
               <Upload className="h-10 w-10 mb-3 opacity-40" />
-              <p className="font-medium">No uploads yet</p>
-              <p className="text-sm mt-1">Upload your first medical document to get started</p>
+              <p className="font-medium">{t("dashboard.noUploads")}</p>
+              <p className="text-sm mt-1">{t("dashboard.firstUpload")}</p>
             </div>
           )}
 
-          {/* My Health shortcuts - enabled only after uploads */}
           {hasUploads && diseases && diseases.length > 0 && (
             <div className="mt-6 pt-4 border-t border-border">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <HeartPulse className="h-4 w-4 text-primary" /> My Health
+                <HeartPulse className="h-4 w-4 text-primary" /> {t("nav.myHealth")}
               </h3>
               <div className="grid grid-cols-3 gap-3">
                 <Link to="/disease-stage" className="p-3 rounded-lg border border-border bg-background hover:bg-accent/30 transition-colors text-center text-sm">
                   <HeartPulse className="h-5 w-5 mx-auto mb-1 text-primary" />
-                  Disease Stage
+                  {t("nav.diseaseStage")}
                 </Link>
                 <Link to="/care-plan" className="p-3 rounded-lg border border-border bg-background hover:bg-accent/30 transition-colors text-center text-sm">
                   <Heart className="h-5 w-5 mx-auto mb-1 text-primary" />
-                  Care Plan
+                  {t("nav.carePlan")}
                 </Link>
                 <Link to="/precautions" className="p-3 rounded-lg border border-border bg-background hover:bg-accent/30 transition-colors text-center text-sm">
                   <AlertTriangle className="h-5 w-5 mx-auto mb-1 text-warning" />
-                  Precautions
+                  {t("nav.precautions")}
                 </Link>
               </div>
             </div>
           )}
         </div>
 
-        {/* Right column */}
         <div className="space-y-6">
-          {/* Recent Uploads */}
           <div className="border border-border rounded-xl p-6 bg-card">
-            <h2 className="text-lg font-semibold mb-4">Recent Uploads</h2>
+            <h2 className="text-lg font-semibold mb-4">{t("dashboard.recentUploads")}</h2>
             {reports && reports.length > 0 ? (
               <div className="space-y-3">
                 {reports.map(r => (
                   <div key={r.id} className="p-3 rounded-lg border border-border bg-background">
                     <p className="text-sm font-medium">{r.report_type || "Report"}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{r.summary?.slice(0, 60) || "Processing..."}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{r.summary?.slice(0, 60) || t("dashboard.processing")}</p>
                     <p className="text-xs text-muted-foreground mt-1">{r.created_at ? format(new Date(r.created_at), "MMM d, yyyy") : ""}</p>
                   </div>
                 ))}
@@ -174,16 +172,15 @@ export default function Dashboard() {
                 <div className="w-12 h-14 border-2 border-dashed border-border rounded-lg flex items-center justify-center mb-3">
                   <span className="text-xs opacity-40">📄</span>
                 </div>
-                <p className="text-sm">No uploads yet</p>
+                <p className="text-sm">{t("dashboard.noUploads")}</p>
               </div>
             )}
           </div>
 
-          {/* Reminders */}
           <div className="border border-border rounded-xl p-6 bg-card">
             <div className="flex items-center gap-2 mb-4">
               <Bell className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Quick Reminders</h2>
+              <h2 className="text-lg font-semibold">{t("dashboard.quickReminders")}</h2>
             </div>
 
             {notifications && notifications.length > 0 && (

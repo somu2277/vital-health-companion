@@ -9,11 +9,13 @@ import { toast } from "sonner";
 import { Settings, Loader2, Moon, Sun, Bell, Shield } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function SettingsPage() {
   const { profile, refreshProfile } = useAuth();
   const { theme, toggle } = useTheme();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const [name, setName] = useState(profile?.name || "");
   const [age, setAge] = useState(profile?.age?.toString() || "");
@@ -21,7 +23,6 @@ export default function SettingsPage() {
   const [location, setLocation] = useState(profile?.location || "");
   const [saving, setSaving] = useState(false);
 
-  // Sync when profile loads
   useEffect(() => {
     if (profile) {
       setName(profile.name || "");
@@ -50,9 +51,9 @@ export default function SettingsPage() {
     }).eq("user_id", profile.user_id);
 
     if (error) {
-      toast.error("Failed to save");
+      toast.error(t("settings.saveFailed"));
     } else {
-      toast.success("Profile updated!");
+      toast.success(t("settings.profileUpdated"));
       refreshProfile();
     }
     setSaving(false);
@@ -62,7 +63,7 @@ export default function SettingsPage() {
     await supabase.from("notifications").update({ status: "dismissed" }).eq("id", id);
     queryClient.invalidateQueries({ queryKey: ["all-notifications"] });
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    toast.success("Notification dismissed");
+    toast.success(t("settings.notificationDismissed"));
   };
 
   return (
@@ -70,70 +71,67 @@ export default function SettingsPage() {
       <div className="flex items-center gap-3">
         <Settings className="h-8 w-8 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">Manage your profile and preferences</p>
+          <h1 className="text-3xl font-bold">{t("settings.title")}</h1>
+          <p className="text-muted-foreground">{t("settings.description")}</p>
         </div>
       </div>
 
-      {/* Profile */}
       <div className="border border-border rounded-xl p-6 bg-card space-y-4">
-        <h2 className="font-semibold text-lg">Profile Information</h2>
+        <h2 className="font-semibold text-lg">{t("settings.profileInfo")}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">{t("settings.fullName")}</Label>
             <Input id="name" value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("settings.email")}</Label>
             <Input id="email" value={profile?.email || ""} disabled />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="age">Age</Label>
+            <Label htmlFor="age">{t("settings.age")}</Label>
             <Input id="age" type="number" value={age} onChange={e => setAge(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="gender">Gender</Label>
+            <Label htmlFor="gender">{t("settings.gender")}</Label>
             <Select value={gender} onValueChange={setGender}>
-              <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("settings.selectGender")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="Male">Male</SelectItem>
-                <SelectItem value="Female">Female</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
+                <SelectItem value="Male">{t("settings.male")}</SelectItem>
+                <SelectItem value="Female">{t("settings.female")}</SelectItem>
+                <SelectItem value="Other">{t("settings.other")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="sm:col-span-2 space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input id="location" value={location} onChange={e => setLocation(e.target.value)} placeholder="City, State, Country" />
+            <Label htmlFor="location">{t("settings.location")}</Label>
+            <Input id="location" value={location} onChange={e => setLocation(e.target.value)} placeholder={t("settings.locationPlaceholder")} />
           </div>
         </div>
         <Button onClick={handleSave} disabled={saving}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-          Save Changes
+          {t("common.save")}
         </Button>
       </div>
 
-      {/* Appearance */}
       <div className="border border-border rounded-xl p-6 bg-card space-y-4">
         <h2 className="font-semibold text-lg flex items-center gap-2">
           {theme === "dark" ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-primary" />}
-          Appearance
+          {t("settings.appearance")}
         </h2>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium text-sm">Dark Mode</p>
-            <p className="text-xs text-muted-foreground">Toggle between light and dark themes</p>
+            <p className="font-medium text-sm">{t("settings.darkMode")}</p>
+            <p className="text-xs text-muted-foreground">{t("settings.darkModeDesc")}</p>
           </div>
           <Button variant="outline" onClick={toggle} className="gap-2">
-            {theme === "dark" ? <><Sun className="h-4 w-4" /> Light Mode</> : <><Moon className="h-4 w-4" /> Dark Mode</>}
+            {theme === "dark" ? <><Sun className="h-4 w-4" /> {t("settings.lightMode")}</> : <><Moon className="h-4 w-4" /> {t("settings.darkMode")}</>}
           </Button>
         </div>
       </div>
 
-      {/* Active Reminders */}
       <div className="border border-border rounded-xl p-6 bg-card space-y-4">
         <h2 className="font-semibold text-lg flex items-center gap-2">
-          <Bell className="h-5 w-5 text-primary" /> Active Reminders
+          <Bell className="h-5 w-5 text-primary" /> {t("settings.activeReminders")}
         </h2>
         {notifications && notifications.filter(n => n.status === "active").length > 0 ? (
           <div className="space-y-2">
@@ -144,23 +142,22 @@ export default function SettingsPage() {
                   <span className="text-sm">{n.message}</span>
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => dismissNotification(n.id)}>
-                  Dismiss
+                  {t("common.dismiss")}
                 </Button>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No active reminders</p>
+          <p className="text-sm text-muted-foreground">{t("settings.noReminders")}</p>
         )}
       </div>
 
-      {/* Data & Privacy */}
       <div className="border border-border rounded-xl p-6 bg-card space-y-3">
         <h2 className="font-semibold text-lg flex items-center gap-2">
-          <Shield className="h-5 w-5 text-primary" /> Data & Privacy
+          <Shield className="h-5 w-5 text-primary" /> {t("settings.dataPrivacy")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Your health data is protected with row-level security. Only you can access your medical reports, medicines, and health records.
+          {t("settings.dataPrivacyDesc")}
         </p>
       </div>
     </div>
