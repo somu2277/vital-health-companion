@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n, localeToLanguage } from "@/hooks/useI18n";
 
 const symptomKeys = [
   "fever", "cough", "cold", "headache", "fatigue", "soreThroat",
