@@ -13,7 +13,8 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const aiCall = async (systemPrompt: string, userPrompt: string) => {
+    const aiCall = async (systemPrompt: string, userPrompt: string | object[]) => {
+      const userContent = typeof userPrompt === "string" ? userPrompt : userPrompt;
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -21,10 +22,10 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
+            { role: "user", content: userContent },
           ],
         }),
       });
@@ -80,7 +81,27 @@ Return ONLY valid JSON:
   "diet_recommendations": ["disease-specific diet suggestions based on medicines"],
   "contraindications": ["things to avoid based on prescribed medicines"]
 }`;
-        const text = await aiCall(systemPrompt, data.reportText);
+        // Build user message - support both text and image input
+        let userMessage: string | object[];
+        if (data.imageBase64) {
+          // Vision-based analysis: send image directly to Gemini
+          userMessage = [
+            {
+              type: "text",
+              text: data.reportText
+                ? `Here is the OCR-extracted text for reference (may contain errors):\n${data.reportText}\n\nPlease analyze the prescription IMAGE directly for accurate medicine extraction. Cross-reference with the OCR text but trust the image more.`
+                : "Please analyze this prescription image and extract all medicines accurately.",
+            },
+            {
+              type: "image_url",
+              image_url: { url: `data:${data.imageMimeType || "image/jpeg"};base64,${data.imageBase64}` },
+            },
+          ];
+        } else {
+          userMessage = data.reportText;
+        }
+
+        const text = await aiCall(systemPrompt, userMessage);
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         result = jsonMatch ? JSON.parse(jsonMatch[0]) : { error: "Could not parse AI response" };
         break;

@@ -22,11 +22,29 @@ type AnalysisResult = {
 };
 
 async function runOCR(file: File): Promise<string> {
-  const { createWorker } = await import("tesseract.js");
-  const worker = await createWorker("eng");
-  const { data: { text } } = await worker.recognize(file);
-  await worker.terminate();
-  return text;
+  try {
+    const { createWorker } = await import("tesseract.js");
+    const worker = await createWorker("eng");
+    const { data: { text } } = await worker.recognize(file);
+    await worker.terminate();
+    return text;
+  } catch {
+    return "";
+  }
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove data URL prefix to get pure base64
+      const base64 = result.split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 export default function UploadReports() {
@@ -168,14 +186,25 @@ export default function UploadReports() {
     setUploading(false);
   };
 
-  const processReport = async (reportText: string, savedFileUrl?: string) => {
+  const processReport = async (reportText: string, savedFileUrl?: string, imageBase64?: string, imageMimeType?: string) => {
     if (!user) return;
 
     setStatus(t("upload.analyzingDoc"));
     setProgress(60);
 
+    const body: Record<string, any> = {
+      action: "analyze-report",
+      data: { reportText, language: langMap[locale] },
+    };
+
+    // If we have image data, send it for vision-based analysis
+    if (imageBase64) {
+      body.data.imageBase64 = imageBase64;
+      body.data.imageMimeType = imageMimeType || "image/jpeg";
+    }
+
     const { data: aiResult, error: aiError } = await supabase.functions.invoke("ai-health", {
-      body: { action: "analyze-report", data: { reportText, language: langMap[locale] } },
+      body,
     });
 
     if (aiError || aiResult?.error) {
@@ -190,13 +219,11 @@ export default function UploadReports() {
     const needsReview = aiResult.medicines?.some((m: ExtractedMedicine) => m.needs_review || m.confidence < 90);
 
     if (needsReview && aiResult.medicines?.length > 0) {
-      // Show confirmation UI
       setFileUrl(savedFileUrl);
       setPendingConfirmation(aiResult);
       setUploading(false);
       setStatus(t("upload.reviewRequired"));
     } else {
-      // Auto-confirm all medicines
       await saveConfirmedMedicines(aiResult.medicines || [], aiResult, savedFileUrl);
     }
   };
@@ -221,16 +248,25 @@ export default function UploadReports() {
       setStatus(t("upload.extracting"));
 
       let reportText = "";
+      let imageBase64: string | undefined;
+      let imageMimeType: string | undefined;
+
       if (file.type.startsWith("text/")) {
         reportText = await file.text();
       } else if (file.type.startsWith("image/")) {
+        // Convert image to base64 for vision-based AI analysis
+        setStatus(t("upload.extracting"));
+        imageBase64 = await fileToBase64(file);
+        imageMimeType = file.type;
+
+        // Also run OCR as supplementary text (non-blocking)
         try {
           reportText = await runOCR(file);
-          if (!reportText.trim()) {
-            reportText = `[Image uploaded: ${file.name}]. Could not extract text via OCR. Please analyze as a medical document image.`;
-          }
         } catch {
-          reportText = `[Image uploaded: ${file.name}]. OCR failed. Please analyze as a medical document image.`;
+          reportText = "";
+        }
+        if (!reportText.trim()) {
+          reportText = `Prescription image: ${file.name}`;
         }
       } else {
         reportText = `[Uploaded file: ${file.name}, type: ${file.type}, size: ${(file.size / 1024).toFixed(1)}KB]. Please analyze this medical document.`;
@@ -241,7 +277,7 @@ export default function UploadReports() {
 
       const { data: urlData } = supabase.storage.from("medical-reports").getPublicUrl(filePath);
 
-      await processReport(reportText, urlData.publicUrl);
+      await processReport(reportText, urlData.publicUrl, imageBase64, imageMimeType);
     } catch (err: any) {
       toast.error(err.message || "Upload failed");
     } finally {
