@@ -22,11 +22,29 @@ type AnalysisResult = {
 };
 
 async function runOCR(file: File): Promise<string> {
-  const { createWorker } = await import("tesseract.js");
-  const worker = await createWorker("eng");
-  const { data: { text } } = await worker.recognize(file);
-  await worker.terminate();
-  return text;
+  try {
+    const { createWorker } = await import("tesseract.js");
+    const worker = await createWorker("eng");
+    const { data: { text } } = await worker.recognize(file);
+    await worker.terminate();
+    return text;
+  } catch {
+    return "";
+  }
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove data URL prefix to get pure base64
+      const base64 = result.split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 export default function UploadReports() {
