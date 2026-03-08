@@ -23,7 +23,7 @@ export default function SymptomChecker() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Condition[] | null>(null);
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const toggle = (s: string) => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
 
