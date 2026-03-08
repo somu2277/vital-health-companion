@@ -12,8 +12,7 @@ import { format } from "date-fns";
 import { useI18n } from "@/hooks/useI18n";
 
 export default function Dashboard() {
-  const { profile, user } = useAuth();
-  const queryClient = useQueryClient();
+  const { profile } = useAuth();
   const { t } = useI18n();
 
   const quickActions = [
