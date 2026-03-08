@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n, localeNames, type Locale } from "@/hooks/useI18n";
+import NotificationBell from "./NotificationBell";
 
 export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const { profile, signOut } = useAuth();
@@ -28,6 +29,7 @@ export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => v
       <button onClick={toggle} className="p-2 rounded-lg hover:bg-accent transition-colors" aria-label="Toggle dark mode">
         {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
       </button>
+      <NotificationBell />
       <button className="p-2 rounded-lg hover:bg-accent transition-colors">
         <MessageSquare className="h-4 w-4 text-muted-foreground" />
       </button>

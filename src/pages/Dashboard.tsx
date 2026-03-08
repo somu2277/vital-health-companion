@@ -1,19 +1,18 @@
 import { Link } from "react-router-dom";
-import { Upload, Stethoscope, MapPin, MessageSquare, Search, Bell, Droplets, Moon, Footprints, HeartPulse, Pill, AlertTriangle, ClipboardList, Salad, ShieldAlert, Activity } from "lucide-react";
+import { Upload, Stethoscope, MapPin, MessageSquare, Search, HeartPulse, Pill, ClipboardList, Salad, ShieldAlert, Activity } from "lucide-react";
 import { Heart } from "lucide-react";
 import LiveHealthMetrics from "@/components/dashboard/LiveHealthMetrics";
+import QuickReminders from "@/components/dashboard/QuickReminders";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
 
 export default function Dashboard() {
-  const { profile, user } = useAuth();
-  const queryClient = useQueryClient();
+  const { profile } = useAuth();
   const { t } = useI18n();
 
   const quickActions = [
@@ -24,11 +23,6 @@ export default function Dashboard() {
     { to: "/symptoms", icon: Search, label: t("dashboard.symptomChecker"), bg: "bg-feature-symptom", iconColor: "text-feature-symptom-icon" },
   ];
 
-  const defaultReminders = [
-    { type: "water", icon: Droplets, message: t("dashboard.drinkWater"), color: "text-info" },
-    { type: "sleep", icon: Moon, message: t("dashboard.sleepReminder"), color: "text-feature-ai-icon" },
-    { type: "exercise", icon: Footprints, message: t("dashboard.walkReminder"), color: "text-success" },
-  ];
 
   const { data: reports } = useQuery({
     queryKey: ["reports"],
@@ -46,13 +40,6 @@ export default function Dashboard() {
     },
   });
 
-  const { data: notifications } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: async () => {
-      const { data } = await supabase.from("notifications").select("*").eq("status", "active").order("created_at", { ascending: false }).limit(10);
-      return data || [];
-    },
-  });
 
   const { data: healthProfile } = useQuery({
     queryKey: ["health-profile"],
@@ -70,12 +57,6 @@ export default function Dashboard() {
   const hasUploads = reports && reports.length > 0;
   const hasHealthProfile = !!healthProfile;
 
-  const addReminder = async (type: string, message: string) => {
-    if (!user) return;
-    await supabase.from("notifications").insert({ user_id: user.id, type, message, status: "active" });
-    queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    toast.success(`Reminder added: ${message}`);
-  };
 
   const stageColor = (stage: string | null) => {
     if (!stage) return "text-muted-foreground";
@@ -281,36 +262,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="border border-border rounded-xl p-6 bg-card">
-            <div className="flex items-center gap-2 mb-4">
-              <Bell className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">{t("dashboard.quickReminders")}</h2>
-            </div>
-
-            {notifications && notifications.length > 0 && (
-              <div className="space-y-2 mb-4">
-                {notifications.slice(0, 3).map(n => (
-                  <div key={n.id} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background text-sm">
-                    <Bell className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate">{n.message}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {defaultReminders.map(r => (
-                <button
-                  key={r.type}
-                  onClick={() => addReminder(r.type, r.message)}
-                  className="flex items-center gap-2 w-full p-2 rounded-lg border border-dashed border-border hover:bg-accent/30 transition-colors text-sm text-muted-foreground"
-                >
-                  <r.icon className={`h-3.5 w-3.5 ${r.color} shrink-0`} />
-                  <span className="truncate">+ {r.message}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <QuickReminders />
         </div>
       </div>
     </div>

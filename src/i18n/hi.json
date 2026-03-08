@@ -435,5 +435,18 @@
       "lowSleep": "कम नींद की अवधि",
       "lowActivity": "कम दैनिक गतिविधि"
     }
+  },
+  "reminders": {
+    "notifications": "सूचनाएं",
+    "activeReminders": "आपके सक्रिय रिमाइंडर",
+    "noReminders": "कोई सक्रिय रिमाइंडर नहीं",
+    "completed": "रिमाइंडर पूरा हुआ!",
+    "added": "रिमाइंडर जोड़ा गया!",
+    "auto": "ऑटो",
+    "manual": "मैनुअल",
+    "water": "पानी पीना",
+    "medicine": "दवाई",
+    "sleep": "नींद",
+    "activity": "गतिविधि"
   }
 }
