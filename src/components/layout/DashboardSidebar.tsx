@@ -1,28 +1,30 @@
 import { Link, useLocation } from "react-router-dom";
 import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const coreLinks = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/upload", icon: Upload, label: "Upload Reports" },
-  { to: "/assistant", icon: MessageSquare, label: "AI Assistant" },
-  { to: "/find-doctors", icon: Stethoscope, label: "Find Doctors" },
-  { to: "/nearby", icon: MapPin, label: "Nearby Care" },
-  { to: "/medicines", icon: Pill, label: "Medicines" },
-  { to: "/history", icon: Clock, label: "History" },
-  { to: "/symptoms", icon: Search, label: "Symptom Checker" },
-  { to: "/medicine-safety", icon: Shield, label: "Medicine Safety" },
-  { to: "/help", icon: HelpCircle, label: "Help & Safety" },
-];
-
-const healthLinks = [
-  { to: "/disease-stage", icon: HeartPulse, label: "Disease Stage" },
-  { to: "/care-plan", icon: ClipboardList, label: "Care Plan" },
-  { to: "/precautions", icon: AlertTriangle, label: "Precautions" },
-];
+import { useI18n } from "@/hooks/useI18n";
 
 export default function DashboardSidebar({ onClose }: { onClose?: () => void }) {
   const location = useLocation();
+  const { t } = useI18n();
+
+  const coreLinks = [
+    { to: "/dashboard", icon: LayoutDashboard, label: t("nav.dashboard") },
+    { to: "/upload", icon: Upload, label: t("nav.upload") },
+    { to: "/assistant", icon: MessageSquare, label: t("nav.assistant") },
+    { to: "/find-doctors", icon: Stethoscope, label: t("nav.findDoctors") },
+    { to: "/nearby", icon: MapPin, label: t("nav.nearby") },
+    { to: "/medicines", icon: Pill, label: t("nav.medicines") },
+    { to: "/history", icon: Clock, label: t("nav.history") },
+    { to: "/symptoms", icon: Search, label: t("nav.symptoms") },
+    { to: "/medicine-safety", icon: Shield, label: t("nav.medicineSafety") },
+    { to: "/help", icon: HelpCircle, label: t("nav.help") },
+  ];
+
+  const healthLinks = [
+    { to: "/disease-stage", icon: HeartPulse, label: t("nav.diseaseStage") },
+    { to: "/care-plan", icon: ClipboardList, label: t("nav.carePlan") },
+    { to: "/precautions", icon: AlertTriangle, label: t("nav.precautions") },
+  ];
 
   const NavItem = ({ to, icon: Icon, label }: { to: string; icon: React.ElementType; label: string }) => {
     const isActive = location.pathname === to;
@@ -60,15 +62,15 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 space-y-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted px-4 mb-2">Core</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted px-4 mb-2">{t("nav.core")}</p>
         {coreLinks.map(link => <NavItem key={link.to} {...link} />)}
 
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted px-4 mt-6 mb-2">My Health</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted px-4 mt-6 mb-2">{t("nav.myHealth")}</p>
         {healthLinks.map(link => <NavItem key={link.to} {...link} />)}
       </nav>
 
       <div className="px-3 pb-4">
-        <NavItem to="/settings" icon={Settings} label="Settings" />
+        <NavItem to="/settings" icon={Settings} label={t("nav.settings")} />
       </div>
     </aside>
   );

@@ -1,14 +1,16 @@
-import { MessageSquare, Languages, ChevronDown, LogOut, Menu, Moon, Sun } from "lucide-react";
+import { MessageSquare, ChevronDown, LogOut, Menu, Moon, Sun, Globe } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/useTheme";
+import { useI18n, localeNames, type Locale } from "@/hooks/useI18n";
 
 export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const { locale, setLocale, t } = useI18n();
 
   const handleSignOut = async () => {
     await signOut();
@@ -29,9 +31,25 @@ export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => v
       <button className="p-2 rounded-lg hover:bg-accent transition-colors">
         <MessageSquare className="h-4 w-4 text-muted-foreground" />
       </button>
-      <button className="p-2 rounded-lg hover:bg-accent transition-colors">
-        <Languages className="h-4 w-4 text-muted-foreground" />
-      </button>
+
+      {/* Language Switcher */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-accent transition-colors text-sm">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <span className="hidden sm:inline text-muted-foreground">{localeNames[locale]}</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {(Object.keys(localeNames) as Locale[]).map(l => (
+            <DropdownMenuItem key={l} onClick={() => setLocale(l)} className={locale === l ? "font-semibold text-primary" : ""}>
+              {localeNames[l]}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* User Menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer hover:bg-accent rounded-lg px-2 py-1 transition-colors">
@@ -43,9 +61,9 @@ export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => v
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => navigate("/settings")}>Settings</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate("/settings")}>{t("nav.settings")}</DropdownMenuItem>
           <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-            <LogOut className="h-4 w-4 mr-2" /> Sign Out
+            <LogOut className="h-4 w-4 mr-2" /> {t("settings.signOut")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
