@@ -27,6 +27,8 @@ import EmergencySOS from "./pages/EmergencySOS";
 import HealthRiskScore from "./pages/HealthRiskScore";
 import MedicineInteractions from "./pages/MedicineInteractions";
 import HealthCoach from "./pages/HealthCoach";
+import ReminderHistory from "./pages/ReminderHistory";
+import ReminderSettings from "./pages/ReminderSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +63,8 @@ const App = () => (
                 <Route path="/health-risk" element={<HealthRiskScore />} />
                 <Route path="/medicine-interactions" element={<MedicineInteractions />} />
                 <Route path="/health-coach" element={<HealthCoach />} />
+                <Route path="/reminder-history" element={<ReminderHistory />} />
+                <Route path="/reminder-settings" element={<ReminderSettings />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

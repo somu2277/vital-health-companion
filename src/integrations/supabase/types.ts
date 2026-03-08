@@ -263,6 +263,48 @@ export type Database = {
         }
         Relationships: []
       }
+      reminder_settings: {
+        Row: {
+          activity_enabled: boolean
+          created_at: string | null
+          id: string
+          medicine_enabled: boolean
+          quiet_end: string
+          quiet_start: string
+          sleep_enabled: boolean
+          updated_at: string | null
+          user_id: string
+          water_enabled: boolean
+          water_interval_hours: number
+        }
+        Insert: {
+          activity_enabled?: boolean
+          created_at?: string | null
+          id?: string
+          medicine_enabled?: boolean
+          quiet_end?: string
+          quiet_start?: string
+          sleep_enabled?: boolean
+          updated_at?: string | null
+          user_id: string
+          water_enabled?: boolean
+          water_interval_hours?: number
+        }
+        Update: {
+          activity_enabled?: boolean
+          created_at?: string | null
+          id?: string
+          medicine_enabled?: boolean
+          quiet_end?: string
+          quiet_start?: string
+          sleep_enabled?: boolean
+          updated_at?: string | null
+          user_id?: string
+          water_enabled?: boolean
+          water_interval_hours?: number
+        }
+        Relationships: []
+      }
       reminders: {
         Row: {
           created_at: string | null

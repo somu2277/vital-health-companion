@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings, X, Lock, Siren, Activity, Lightbulb, Zap } from "lucide-react";
+import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings, X, Lock, Siren, Activity, Lightbulb, Zap, Bell, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/hooks/useI18n";
 import { useQuery } from "@tanstack/react-query";
@@ -31,6 +31,7 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
     { to: "/history", icon: Clock, label: t("nav.history") },
     { to: "/symptoms", icon: Search, label: t("nav.symptoms") },
     { to: "/medicine-safety", icon: Shield, label: t("nav.medicineSafety") },
+    { to: "/reminder-history", icon: History, label: t("nav.reminderHistory") },
     { to: "/help", icon: HelpCircle, label: t("nav.help") },
   ];
 
@@ -115,7 +116,8 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
         {aiLinks.map(link => <NavItem key={link.to} {...link} />)}
       </nav>
 
-      <div className="px-3 pb-4">
+      <div className="px-3 pb-4 space-y-1">
+        <NavItem to="/reminder-settings" icon={Bell} label={t("nav.reminderSettings")} />
         <NavItem to="/settings" icon={Settings} label={t("nav.settings")} />
       </div>
     </aside>

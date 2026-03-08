@@ -48,6 +48,29 @@ serve(async (req) => {
         return json({ reminders: reminders || [] });
       }
 
+      case "get-history": {
+        let query = supabase
+          .from("reminders")
+          .select("*")
+          .eq("user_id", userId)
+          .in("status", ["completed", "dismissed"])
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (data?.type) {
+          query = query.eq("type", data.type);
+        }
+        if (data?.date) {
+          const dayStart = `${data.date}T00:00:00.000Z`;
+          const dayEnd = `${data.date}T23:59:59.999Z`;
+          query = query.gte("created_at", dayStart).lte("created_at", dayEnd);
+        }
+
+        const { data: reminders, error } = await query;
+        if (error) throw new Error(error.message);
+        return json({ reminders: reminders || [] });
+      }
+
       case "create-reminder": {
         const { type, message, scheduled_time, source } = data;
         const { error } = await supabase.from("reminders").insert({
