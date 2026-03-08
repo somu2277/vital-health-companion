@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings } from "lucide-react";
+import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const coreLinks = [
@@ -21,7 +21,7 @@ const healthLinks = [
   { to: "/precautions", icon: AlertTriangle, label: "Precautions" },
 ];
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({ onClose }: { onClose?: () => void }) {
   const location = useLocation();
 
   const NavItem = ({ to, icon: Icon, label }: { to: string; icon: React.ElementType; label: string }) => {
@@ -29,6 +29,7 @@ export default function DashboardSidebar() {
     return (
       <Link
         to={to}
+        onClick={onClose}
         className={cn(
           "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all",
           isActive
@@ -43,13 +44,20 @@ export default function DashboardSidebar() {
   };
 
   return (
-    <aside className="w-[240px] h-screen bg-sidebar flex flex-col border-r border-sidebar-border fixed left-0 top-0 z-30">
-      <Link to="/" className="flex items-center gap-2 px-5 py-5">
-        <Heart className="h-6 w-6 text-sidebar-primary fill-sidebar-primary" />
-        <span className="text-xl font-bold text-sidebar-primary-foreground">
-          Vital<span className="text-sidebar-primary">Wave</span>
-        </span>
-      </Link>
+    <aside className="w-[240px] h-screen bg-sidebar flex flex-col border-r border-sidebar-border">
+      <div className="flex items-center justify-between px-5 py-5">
+        <Link to="/" className="flex items-center gap-2">
+          <Heart className="h-6 w-6 text-sidebar-primary fill-sidebar-primary" />
+          <span className="text-xl font-bold text-sidebar-primary-foreground">
+            Vital<span className="text-sidebar-primary">Wave</span>
+          </span>
+        </Link>
+        {onClose && (
+          <button onClick={onClose} className="lg:hidden p-1 rounded hover:bg-sidebar-accent transition-colors">
+            <X className="h-5 w-5 text-sidebar-foreground" />
+          </button>
+        )}
+      </div>
 
       <nav className="flex-1 overflow-y-auto px-3 space-y-1">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted px-4 mb-2">Core</p>
