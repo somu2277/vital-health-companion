@@ -45,7 +45,9 @@
     "emergency": "Emergency SOS",
     "healthRisk": "Health Risk Score",
     "interactions": "Medicine Interactions",
-    "healthCoach": "Health Coach"
+    "healthCoach": "Health Coach",
+    "reminderHistory": "Reminder History",
+    "reminderSettings": "Reminder Settings"
   },
   "auth": {
     "welcomeBack": "Welcome back",
