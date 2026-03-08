@@ -35,7 +35,6 @@ export default function SettingsPage() {
   });
 
   const watchConnected = wearableStatus?.connected;
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (profile) {
