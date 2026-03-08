@@ -186,14 +186,25 @@ export default function UploadReports() {
     setUploading(false);
   };
 
-  const processReport = async (reportText: string, savedFileUrl?: string) => {
+  const processReport = async (reportText: string, savedFileUrl?: string, imageBase64?: string, imageMimeType?: string) => {
     if (!user) return;
 
     setStatus(t("upload.analyzingDoc"));
     setProgress(60);
 
+    const body: Record<string, any> = {
+      action: "analyze-report",
+      data: { reportText, language: langMap[locale] },
+    };
+
+    // If we have image data, send it for vision-based analysis
+    if (imageBase64) {
+      body.data.imageBase64 = imageBase64;
+      body.data.imageMimeType = imageMimeType || "image/jpeg";
+    }
+
     const { data: aiResult, error: aiError } = await supabase.functions.invoke("ai-health", {
-      body: { action: "analyze-report", data: { reportText, language: langMap[locale] } },
+      body,
     });
 
     if (aiError || aiResult?.error) {
@@ -208,13 +219,11 @@ export default function UploadReports() {
     const needsReview = aiResult.medicines?.some((m: ExtractedMedicine) => m.needs_review || m.confidence < 90);
 
     if (needsReview && aiResult.medicines?.length > 0) {
-      // Show confirmation UI
       setFileUrl(savedFileUrl);
       setPendingConfirmation(aiResult);
       setUploading(false);
       setStatus(t("upload.reviewRequired"));
     } else {
-      // Auto-confirm all medicines
       await saveConfirmedMedicines(aiResult.medicines || [], aiResult, savedFileUrl);
     }
   };
