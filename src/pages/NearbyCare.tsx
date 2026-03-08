@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useI18n } from "@/hooks/useI18n";
 import type { MapPlace } from "@/components/maps/LeafletMap";
 
 const LeafletMap = lazy(() => import("@/components/maps/LeafletMap"));
@@ -14,6 +15,7 @@ export default function NearbyCare() {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("all");
   const [located, setLocated] = useState(false);
+  const { t } = useI18n();
 
   const fetchNearby = useCallback(async (lat: number, lon: number) => {
     setLoading(true);
@@ -105,29 +107,29 @@ export default function NearbyCare() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Nearby Healthcare</h1>
-        <p className="text-muted-foreground">Find hospitals, clinics, and pharmacies near you</p>
+        <h1 className="text-3xl font-bold">{t("nearby.title")}</h1>
+        <p className="text-muted-foreground">{t("nearby.description")}</p>
       </div>
 
       <div className="flex flex-wrap gap-3 items-center">
         <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Facilities" />
+            <SelectValue placeholder={t("nearby.allFacilities")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Facilities</SelectItem>
-            <SelectItem value="hospital">Hospitals</SelectItem>
-            <SelectItem value="clinic">Clinics</SelectItem>
-            <SelectItem value="pharmacy">Pharmacies</SelectItem>
+            <SelectItem value="all">{t("nearby.allFacilities")}</SelectItem>
+            <SelectItem value="hospital">{t("nearby.hospitals")}</SelectItem>
+            <SelectItem value="clinic">{t("nearby.clinics")}</SelectItem>
+            <SelectItem value="pharmacy">{t("nearby.pharmacies")}</SelectItem>
           </SelectContent>
         </Select>
         <Button variant="outline" className="gap-2" onClick={autoDetect} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
-          {located ? "Refresh Location" : "Auto Detect"}
+          {located ? t("nearby.refreshLocation") : t("nearby.autoDetect")}
         </Button>
         <span className="text-sm text-muted-foreground flex items-center gap-1">
           <MapPin className="h-3.5 w-3.5 text-primary" />
-          {located ? `${position[0].toFixed(4)}, ${position[1].toFixed(4)}` : "Detecting location..."}
+          {located ? `${position[0].toFixed(4)}, ${position[1].toFixed(4)}` : t("nearby.detectingLocation")}
         </span>
       </div>
 
@@ -142,26 +144,26 @@ export default function NearbyCare() {
           <Tabs defaultValue="hospitals">
             <TabsList className="w-full grid grid-cols-3">
               <TabsTrigger value="hospitals" className="gap-1.5 text-xs sm:text-sm">
-                <Building2 className="h-3.5 w-3.5" /> Hospitals ({hospitals.length})
+                <Building2 className="h-3.5 w-3.5" /> {t("nearby.hospitals")} ({hospitals.length})
               </TabsTrigger>
               <TabsTrigger value="clinics" className="gap-1.5 text-xs sm:text-sm">
-                <Stethoscope className="h-3.5 w-3.5" /> Clinics ({clinics.length})
+                <Stethoscope className="h-3.5 w-3.5" /> {t("nearby.clinics")} ({clinics.length})
               </TabsTrigger>
               <TabsTrigger value="pharmacies" className="gap-1.5 text-xs sm:text-sm">
-                <Pill className="h-3.5 w-3.5" /> Pharmacies ({pharmacies.length})
+                <Pill className="h-3.5 w-3.5" /> {t("nearby.pharmacies")} ({pharmacies.length})
               </TabsTrigger>
             </TabsList>
             <TabsContent value="hospitals" className="mt-4 space-y-2 max-h-[340px] overflow-y-auto">
               {hospitals.length > 0 ? hospitals.map(p => <PlaceCard key={p.id} place={p} />) :
-                <p className="text-center text-muted-foreground py-8">No hospitals found nearby</p>}
+                <p className="text-center text-muted-foreground py-8">{t("nearby.noHospitals")}</p>}
             </TabsContent>
             <TabsContent value="clinics" className="mt-4 space-y-2 max-h-[340px] overflow-y-auto">
               {clinics.length > 0 ? clinics.map(p => <PlaceCard key={p.id} place={p} />) :
-                <p className="text-center text-muted-foreground py-8">No clinics found nearby</p>}
+                <p className="text-center text-muted-foreground py-8">{t("nearby.noClinics")}</p>}
             </TabsContent>
             <TabsContent value="pharmacies" className="mt-4 space-y-2 max-h-[340px] overflow-y-auto">
               {pharmacies.length > 0 ? pharmacies.map(p => <PlaceCard key={p.id} place={p} />) :
-                <p className="text-center text-muted-foreground py-8">No pharmacies found nearby</p>}
+                <p className="text-center text-muted-foreground py-8">{t("nearby.noPharmacies")}</p>}
             </TabsContent>
           </Tabs>
         </div>

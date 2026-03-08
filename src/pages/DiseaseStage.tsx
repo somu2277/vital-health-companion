@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function DiseaseStage() {
   const { user } = useAuth();
   const [predicting, setPredicting] = useState(false);
+  const { t } = useI18n();
 
   const { data: stages, isLoading, refetch } = useQuery({
     queryKey: ["disease-stages"],
@@ -49,7 +51,7 @@ export default function DiseaseStage() {
       }).eq("user_id", user.id).eq("disease", disease);
 
       refetch();
-      toast.success("Disease stage predicted!");
+      toast.success(t("diseaseStage.predicted"));
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -60,8 +62,8 @@ export default function DiseaseStage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Disease Stage</h1>
-        <p className="text-muted-foreground">AI-powered disease stage prediction based on your reports</p>
+        <h1 className="text-3xl font-bold">{t("diseaseStage.title")}</h1>
+        <p className="text-muted-foreground">{t("diseaseStage.description")}</p>
       </div>
 
       {isLoading ? (
@@ -72,7 +74,7 @@ export default function DiseaseStage() {
             <div key={s.id} className="border border-border rounded-xl p-6 bg-card">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold">{s.disease}</h3>
-                {s.stage !== "Pending analysis" && (
+                {s.stage !== t("diseaseStage.pendingAnalysis") && s.stage !== "Pending analysis" && (
                   <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">{s.stage}</span>
                 )}
               </div>
@@ -86,7 +88,7 @@ export default function DiseaseStage() {
               ) : (
                 <Button size="sm" onClick={() => predictStage(s.disease)} disabled={predicting}>
                   {predicting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <HeartPulse className="h-4 w-4 mr-2" />}
-                  Predict Stage
+                  {t("diseaseStage.predictStage")}
                 </Button>
               )}
             </div>
@@ -95,8 +97,8 @@ export default function DiseaseStage() {
       ) : (
         <div className="border border-border rounded-xl p-12 bg-card flex flex-col items-center text-muted-foreground">
           <HeartPulse className="h-12 w-12 mb-4 opacity-30" />
-          <p className="font-medium">No disease data available</p>
-          <p className="text-sm mt-1">Upload medical reports to get AI-powered disease stage predictions</p>
+          <p className="font-medium">{t("diseaseStage.noData")}</p>
+          <p className="text-sm mt-1">{t("diseaseStage.noDataDesc")}</p>
         </div>
       )}
     </div>

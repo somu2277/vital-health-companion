@@ -1,42 +1,33 @@
-import { Phone, Shield, Heart, AlertTriangle, Ambulance, Baby, Users, ExternalLink } from "lucide-react";
-
-const emergencyContacts = [
-  { number: "112", label: "Emergency (Police/Fire/Ambulance)", icon: AlertTriangle, color: "bg-destructive/10 text-destructive" },
-  { number: "108", label: "Ambulance Service", icon: Heart, color: "bg-info/10 text-info" },
-  { number: "181", label: "Women Helpline", icon: Users, color: "bg-feature-doctor text-feature-doctor-icon" },
-  { number: "1098", label: "Child Helpline", icon: Baby, color: "bg-feature-ai text-feature-ai-icon" },
-  { number: "104", label: "Health Helpline", icon: Phone, color: "bg-success/10 text-success" },
-  { number: "14529", label: "Senior Citizens Helpline", icon: Users, color: "bg-feature-hospital text-feature-hospital-icon" },
-];
-
-const safetyInfo = [
-  {
-    icon: Shield,
-    title: "Your Data is Secure",
-    desc: "All health data is encrypted using industry-standard protocols. Row-level security ensures only you can access your data. We never share your information without explicit consent.",
-  },
-  {
-    icon: Heart,
-    title: "Mental Health Support",
-    desc: "If you're experiencing a mental health crisis, please reach out to a helpline. You can call iCall at 9152987821 or Vandrevala Foundation at 1860-2662-345.",
-  },
-  {
-    icon: AlertTriangle,
-    title: "Medical Disclaimer",
-    desc: "VitalWave AI provides health information for awareness only. It is NOT a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider.",
-  },
-];
+import { Phone, Shield, Heart, AlertTriangle, Baby, Users, ExternalLink } from "lucide-react";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function HelpSafety() {
+  const { t } = useI18n();
+
+  const emergencyContacts = [
+    { number: "112", label: t("help.emergency112"), icon: AlertTriangle, color: "bg-destructive/10 text-destructive" },
+    { number: "108", label: t("help.ambulance108"), icon: Heart, color: "bg-info/10 text-info" },
+    { number: "181", label: t("help.women181"), icon: Users, color: "bg-feature-doctor text-feature-doctor-icon" },
+    { number: "1098", label: t("help.child1098"), icon: Baby, color: "bg-feature-ai text-feature-ai-icon" },
+    { number: "104", label: t("help.health104"), icon: Phone, color: "bg-success/10 text-success" },
+    { number: "14529", label: t("help.senior14529"), icon: Users, color: "bg-feature-hospital text-feature-hospital-icon" },
+  ];
+
+  const safetyInfo = [
+    { icon: Shield, title: t("help.dataSecure"), desc: t("help.dataSecureDesc") },
+    { icon: Heart, title: t("help.mentalHealth"), desc: t("help.mentalHealthDesc") },
+    { icon: AlertTriangle, title: t("help.medicalDisclaimer"), desc: t("help.medicalDisclaimerDesc") },
+  ];
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Help & Safety</h1>
-        <p className="text-muted-foreground">Emergency contacts and important safety information</p>
+        <h1 className="text-3xl font-bold">{t("help.title")}</h1>
+        <p className="text-muted-foreground">{t("help.description")}</p>
       </div>
 
       <div className="border border-border rounded-xl p-6 bg-card">
-        <h2 className="font-semibold text-lg mb-4">🚨 Emergency Numbers</h2>
+        <h2 className="font-semibold text-lg mb-4">{t("help.emergencyNumbers")}</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {emergencyContacts.map((c) => (
             <a
@@ -71,7 +62,7 @@ export default function HelpSafety() {
       </div>
 
       <div className="border border-border rounded-xl p-5 bg-card">
-        <h2 className="font-semibold text-lg mb-3">Useful Links</h2>
+        <h2 className="font-semibold text-lg mb-3">{t("help.usefulLinks")}</h2>
         <div className="space-y-2">
           {[
             { label: "WHO Health Topics", url: "https://www.who.int/health-topics" },

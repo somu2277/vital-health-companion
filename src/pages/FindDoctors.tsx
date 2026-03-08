@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
-import { Search, Stethoscope, Star, Phone, MapPin, Loader2, Navigation } from "lucide-react";
+import { Search, Stethoscope, Phone, Loader2, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useI18n } from "@/hooks/useI18n";
 
 type Doctor = {
   id: number;
@@ -18,12 +19,12 @@ export default function FindDoctors() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const { t } = useI18n();
 
   const searchDoctors = useCallback(async () => {
     setLoading(true);
     setSearched(true);
     try {
-      // Get user location
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject)
       ).catch(() => null);
@@ -79,8 +80,8 @@ export default function FindDoctors() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Find Doctors</h1>
-        <p className="text-muted-foreground">Search specialists by condition, view ratings, and call directly</p>
+        <h1 className="text-3xl font-bold">{t("doctors.title")}</h1>
+        <p className="text-muted-foreground">{t("doctors.description")}</p>
       </div>
 
       <div className="flex gap-3">
@@ -90,13 +91,13 @@ export default function FindDoctors() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === "Enter" && searchDoctors()}
-            placeholder="Search by name, specialty, or condition..."
+            placeholder={t("doctors.searchPlaceholder")}
             className="w-full h-10 pl-10 pr-4 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
         <Button onClick={searchDoctors} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-          Search
+          {t("common.search")}
         </Button>
       </div>
 
@@ -122,13 +123,13 @@ export default function FindDoctors() {
                 {doc.phone && (
                   <a href={`tel:${doc.phone}`}>
                     <Button size="sm" variant="outline" className="gap-1">
-                      <Phone className="h-3 w-3" /> Call
+                      <Phone className="h-3 w-3" /> {t("doctors.call")}
                     </Button>
                   </a>
                 )}
                 <a href={`https://www.google.com/maps/dir/?api=1&destination=${doc.lat},${doc.lon}`} target="_blank" rel="noopener noreferrer">
                   <Button size="sm" variant="outline" className="gap-1">
-                    <Navigation className="h-3 w-3" /> Directions
+                    <Navigation className="h-3 w-3" /> {t("doctors.directions")}
                   </Button>
                 </a>
               </div>
@@ -138,8 +139,8 @@ export default function FindDoctors() {
       ) : searched ? (
         <div className="text-center py-12 text-muted-foreground">
           <Stethoscope className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">No doctors found nearby</p>
-          <p className="text-sm mt-1">Try a different search term or allow location access</p>
+          <p className="font-medium">{t("doctors.noResults")}</p>
+          <p className="text-sm mt-1">{t("doctors.noResultsDesc")}</p>
         </div>
       ) : null}
     </div>

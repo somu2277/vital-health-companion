@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "@/hooks/useI18n";
 
 type AnalysisResult = {
   disease?: string;
@@ -35,6 +36,7 @@ export default function UploadReports() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -51,7 +53,7 @@ export default function UploadReports() {
   const processReport = async (reportText: string, fileUrl?: string) => {
     if (!user) return;
 
-    setStatus("Analyzing with AI...");
+    setStatus(t("upload.analyzingDoc"));
     setProgress(60);
 
     const { data: aiResult, error: aiError } = await supabase.functions.invoke("ai-health", {
@@ -65,9 +67,8 @@ export default function UploadReports() {
     }
 
     setProgress(80);
-    setStatus("Saving results...");
+    setStatus(t("upload.savingResults"));
 
-    // Save report
     await supabase.from("medical_reports").insert({
       user_id: user.id,
       file_url: fileUrl || null,
@@ -76,7 +77,6 @@ export default function UploadReports() {
       summary: aiResult.summary || "",
     });
 
-    // Save medicines
     if (aiResult.medicines?.length) {
       const medsToInsert = aiResult.medicines.map((m: any) => ({
         user_id: user.id,
@@ -88,7 +88,6 @@ export default function UploadReports() {
       }));
       await supabase.from("medicines").insert(medsToInsert);
 
-      // Create medicine reminders as notifications
       for (const m of aiResult.medicines) {
         await supabase.from("notifications").insert({
           user_id: user.id,
@@ -99,31 +98,30 @@ export default function UploadReports() {
       }
     }
 
-    // Save disease stage if disease found
     if (aiResult.disease) {
       await supabase.from("disease_stages").insert({
         user_id: user.id,
         disease: aiResult.disease,
-        stage: "Pending analysis",
+        stage: t("diseaseStage.pendingAnalysis"),
         confidence: 0,
       });
     }
 
     setProgress(100);
-    setStatus("Complete!");
+    setStatus(t("upload.complete"));
     setResult(aiResult);
     queryClient.invalidateQueries({ queryKey: ["reports"] });
     queryClient.invalidateQueries({ queryKey: ["medicines"] });
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
     queryClient.invalidateQueries({ queryKey: ["disease-stages"] });
-    toast.success("Upload & analysis complete!");
+    toast.success(t("upload.uploadSuccess"));
   };
 
   const handleUpload = async () => {
     if (!user || files.length === 0) return;
     setUploading(true);
     setProgress(10);
-    setStatus("Uploading file...");
+    setStatus(t("upload.uploading"));
 
     try {
       const file = files[0];
@@ -136,13 +134,12 @@ export default function UploadReports() {
       if (uploadError) throw uploadError;
 
       setProgress(25);
-      setStatus("Extracting text with OCR...");
+      setStatus(t("upload.extracting"));
 
       let reportText = "";
       if (file.type.startsWith("text/")) {
         reportText = await file.text();
       } else if (file.type.startsWith("image/")) {
-        // Use Tesseract.js OCR for images
         try {
           reportText = await runOCR(file);
           if (!reportText.trim()) {
@@ -156,7 +153,7 @@ export default function UploadReports() {
       }
 
       setProgress(45);
-      setStatus("Text extracted. Analyzing...");
+      setStatus(t("upload.textExtracted"));
 
       const { data: urlData } = supabase.storage.from("medical-reports").getPublicUrl(filePath);
 
@@ -172,7 +169,7 @@ export default function UploadReports() {
     if (!textInput.trim()) return;
     setUploading(true);
     setProgress(10);
-    setStatus("Analyzing text...");
+    setStatus(t("upload.analyzing"));
     try {
       await processReport(textInput);
     } catch (err: any) {
@@ -189,8 +186,8 @@ export default function UploadReports() {
           <div className="flex items-center gap-3 mb-4">
             <CheckCircle className="h-8 w-8 text-success" />
             <div>
-              <h2 className="text-xl font-bold">Upload successful!</h2>
-              <p className="text-sm text-muted-foreground">Your document has been analyzed</p>
+              <h2 className="text-xl font-bold">{t("upload.success")}</h2>
+              <p className="text-sm text-muted-foreground">{t("upload.analyzed")}</p>
             </div>
           </div>
 
@@ -204,21 +201,21 @@ export default function UploadReports() {
 
           {result.summary && (
             <div className="mb-4">
-              <h3 className="font-semibold mb-2">Summary</h3>
+              <h3 className="font-semibold mb-2">{t("upload.summary")}</h3>
               <p className="text-sm text-muted-foreground">{result.summary}</p>
             </div>
           )}
 
           {result.disease && (
             <div className="mb-4 p-3 rounded-lg border border-border bg-background">
-              <h3 className="font-semibold mb-1">Detected Condition</h3>
+              <h3 className="font-semibold mb-1">{t("upload.detectedCondition")}</h3>
               <p className="text-sm text-primary font-medium">{result.disease}</p>
             </div>
           )}
 
           {result.medicines && result.medicines.length > 0 && (
             <div className="mb-4">
-              <h3 className="font-semibold mb-2">Medicines Found ({result.medicines.length})</h3>
+              <h3 className="font-semibold mb-2">{t("upload.medicinesFound")} ({result.medicines.length})</h3>
               {result.medicines.map((m, i) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-border bg-background mb-2">
                   <div className="flex items-center gap-3">
@@ -235,12 +232,12 @@ export default function UploadReports() {
           )}
 
           <div className="p-4 rounded-lg bg-warning/10 text-sm mb-6">
-            <p>⚠️ This analysis is for informational purposes only. Please consult a licensed healthcare professional for medical advice.</p>
+            <p>⚠️ {t("common.disclaimer")}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" onClick={() => { setResult(null); setFiles([]); setProgress(0); }}>Upload Another</Button>
-            <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
+            <Button variant="outline" onClick={() => { setResult(null); setFiles([]); setProgress(0); }}>{t("common.uploadAnother")}</Button>
+            <Button onClick={() => navigate("/dashboard")}>{t("common.goToDashboard")}</Button>
           </div>
         </div>
       </div>
@@ -250,17 +247,17 @@ export default function UploadReports() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Upload Medical Documents</h1>
-        <p className="text-muted-foreground mt-1">Upload your prescriptions, lab reports, or medical images for AI analysis</p>
+        <h1 className="text-3xl font-bold">{t("upload.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("upload.description")}</p>
       </div>
 
       <div className="border border-border rounded-xl bg-card p-6">
         <Tabs defaultValue="file">
           <TabsList className="grid grid-cols-4 mb-6">
-            <TabsTrigger value="file" className="gap-2"><FileText className="h-4 w-4" /> File</TabsTrigger>
-            <TabsTrigger value="camera" className="gap-2"><Camera className="h-4 w-4" /> Camera</TabsTrigger>
-            <TabsTrigger value="text" className="gap-2"><Type className="h-4 w-4" /> Text</TabsTrigger>
-            <TabsTrigger value="link" className="gap-2"><LinkIcon className="h-4 w-4" /> Link</TabsTrigger>
+            <TabsTrigger value="file" className="gap-2"><FileText className="h-4 w-4" /> {t("upload.file")}</TabsTrigger>
+            <TabsTrigger value="camera" className="gap-2"><Camera className="h-4 w-4" /> {t("upload.camera")}</TabsTrigger>
+            <TabsTrigger value="text" className="gap-2"><Type className="h-4 w-4" /> {t("upload.text")}</TabsTrigger>
+            <TabsTrigger value="link" className="gap-2"><LinkIcon className="h-4 w-4" /> {t("upload.link")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="file">
@@ -272,8 +269,8 @@ export default function UploadReports() {
               className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${dragActive ? "border-primary bg-accent/50" : "border-border hover:border-primary/50"}`}
             >
               <Upload className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
-              <p className="font-medium">Drag and drop files here, or click to browse</p>
-              <p className="text-sm text-muted-foreground mt-1">Supported: PDF, JPG, PNG, TXT · OCR enabled for images</p>
+              <p className="font-medium">{t("upload.dragDrop")}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t("upload.supported")}</p>
               <input id="file-input" type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.txt" onChange={handleFileSelect} />
             </div>
           </TabsContent>
@@ -281,7 +278,7 @@ export default function UploadReports() {
           <TabsContent value="camera">
             <div className="text-center py-12 text-muted-foreground">
               <Camera className="h-10 w-10 mx-auto mb-3 opacity-40" />
-              <p>Camera capture coming soon</p>
+              <p>{t("upload.cameraSoon")}</p>
             </div>
           </TabsContent>
 
@@ -290,15 +287,15 @@ export default function UploadReports() {
               value={textInput}
               onChange={e => setTextInput(e.target.value)}
               className="w-full h-40 p-4 rounded-xl border border-border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Paste your medical report or prescription text here..."
+              placeholder={t("upload.pasteText")}
             />
             <Button className="w-full mt-4 h-12 gap-2" onClick={handleTextSubmit} disabled={!textInput.trim() || uploading}>
-              {uploading ? <><Loader2 className="h-5 w-5 animate-spin" /> Analyzing...</> : <><Upload className="h-5 w-5" /> Analyze Text</>}
+              {uploading ? <><Loader2 className="h-5 w-5 animate-spin" /> {t("upload.analyzing")}</> : <><Upload className="h-5 w-5" /> {t("upload.analyzeText")}</>}
             </Button>
           </TabsContent>
 
           <TabsContent value="link">
-            <input type="url" className="w-full p-4 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Paste a link to your medical document..." />
+            <input type="url" className="w-full p-4 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring" placeholder={t("upload.pasteLink")} />
           </TabsContent>
         </Tabs>
 
@@ -331,7 +328,7 @@ export default function UploadReports() {
 
         {!uploading && files.length > 0 && (
           <Button className="w-full mt-6 h-12 text-base gap-2" onClick={handleUpload}>
-            <Upload className="h-5 w-5" /> Upload & Analyze
+            <Upload className="h-5 w-5" /> {t("upload.uploadAnalyze")}
           </Button>
         )}
       </div>

@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function CarePlan() {
   const { user, profile } = useAuth();
   const [generating, setGenerating] = useState(false);
+  const { t } = useI18n();
 
   const { data: carePlans, isLoading, refetch } = useQuery({
     queryKey: ["care-plans"],
@@ -43,7 +45,7 @@ export default function CarePlan() {
 
       await supabase.from("care_plans").insert({ user_id: user.id, plan: data, disease });
       refetch();
-      toast.success("Care plan generated!");
+      toast.success(t("carePlan.generated"));
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -54,11 +56,11 @@ export default function CarePlan() {
   const renderPlan = (plan: any) => {
     if (!plan || typeof plan !== "object") return <p className="text-sm text-muted-foreground">No plan data</p>;
     const sections = [
-      { key: "diet", label: "🥗 Diet", icon: "" },
-      { key: "exercise", label: "🏃 Exercise", icon: "" },
-      { key: "sleep", label: "😴 Sleep", icon: "" },
-      { key: "medication_schedule", label: "💊 Medication Schedule", icon: "" },
-      { key: "followups", label: "🏥 Doctor Follow-ups", icon: "" },
+      { key: "diet", label: t("carePlan.diet") },
+      { key: "exercise", label: t("carePlan.exercise") },
+      { key: "sleep", label: t("carePlan.sleep") },
+      { key: "medication_schedule", label: t("carePlan.medSchedule") },
+      { key: "followups", label: t("carePlan.followups") },
     ];
     return (
       <div className="space-y-4">
@@ -82,13 +84,13 @@ export default function CarePlan() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Care Plan</h1>
-          <p className="text-muted-foreground">Personalized care plans generated from your health data</p>
+          <h1 className="text-3xl font-bold">{t("carePlan.title")}</h1>
+          <p className="text-muted-foreground">{t("carePlan.description")}</p>
         </div>
         {diseases && diseases.length > 0 && (
           <Button onClick={generatePlan} disabled={generating}>
             {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ClipboardList className="h-4 w-4 mr-2" />}
-            Generate Plan
+            {t("carePlan.generatePlan")}
           </Button>
         )}
       </div>
@@ -110,8 +112,8 @@ export default function CarePlan() {
       ) : (
         <div className="border border-border rounded-xl p-12 bg-card flex flex-col items-center text-muted-foreground">
           <ClipboardList className="h-12 w-12 mb-4 opacity-30" />
-          <p className="font-medium">No care plan yet</p>
-          <p className="text-sm mt-1">Upload reports and complete symptom checks to generate your care plan</p>
+          <p className="font-medium">{t("carePlan.noPlan")}</p>
+          <p className="text-sm mt-1">{t("carePlan.noPlanDesc")}</p>
         </div>
       )}
     </div>
