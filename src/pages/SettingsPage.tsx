@@ -25,6 +25,20 @@ export default function SettingsPage() {
   const [gender, setGender] = useState(profile?.gender || "");
   const [location, setLocation] = useState(profile?.location || "");
   const [saving, setSaving] = useState(false);
+  const [connectingWatch, setConnectingWatch] = useState(false);
+
+  const { data: wearableStatus } = useQuery({
+    queryKey: ["wearable-data"],
+    queryFn: async () => {
+      const { data } = await supabase.functions.invoke("wearable-sync", {
+        body: { action: "get-latest", data: {} },
+      });
+      return data as { connected: boolean };
+    },
+  });
+
+  const watchConnected = wearableStatus?.connected;
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (profile) {
