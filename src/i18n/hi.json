@@ -45,7 +45,9 @@
     "emergency": "इमरजेंसी SOS",
     "healthRisk": "स्वास्थ्य जोखिम स्कोर",
     "interactions": "दवा इंटरैक्शन",
-    "healthCoach": "स्वास्थ्य कोच"
+    "healthCoach": "स्वास्थ्य कोच",
+    "reminderHistory": "रिमाइंडर इतिहास",
+    "reminderSettings": "रिमाइंडर सेटिंग्स"
   },
   "auth": {
     "welcomeBack": "वापसी पर स्वागत है",

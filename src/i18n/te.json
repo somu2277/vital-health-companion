@@ -45,7 +45,9 @@
     "emergency": "ఎమర్జెన్సీ SOS",
     "healthRisk": "ఆరోగ్య రిస్క్ స్కోర్",
     "interactions": "మందుల పరస్పర చర్యలు",
-    "healthCoach": "ఆరోగ్య కోచ్"
+    "healthCoach": "ఆరోగ్య కోచ్",
+    "reminderHistory": "రిమైండర్ చరిత్ర",
+    "reminderSettings": "రిమైండర్ సెట్టింగ్‌లు"
   },
   "auth": {
     "welcomeBack": "తిరిగి స్వాగతం",
