@@ -120,7 +120,17 @@
     "file": "ఫైల్",
     "camera": "కెమెరా",
     "text": "టెక్స్ట్",
-    "link": "లింక్"
+    "link": "లింక్",
+    "confirmMedicines": "కనుగొన్న మందులను నిర్ధారించండి",
+    "reviewExtracted": "మీ ప్రిస్క్రిప్షన్ నుండి కనుగొన్న మందులను సమీక్షించి నిర్ధారించండి",
+    "needsReview": "సమీక్ష అవసరం",
+    "medicineName": "మందు పేరు",
+    "dosageLabel": "మోతాదు",
+    "frequencyLabel": "ఎంత తరచుగా",
+    "durationLabel": "వ్యవధి",
+    "confirmAll": "అన్నీ నిర్ధారించండి",
+    "reviewRequired": "సమీక్ష అవసరం - కొన్ని మందులకు నిర్ధారణ అవసరం",
+    "warnings": "హెచ్చరికలు"
   },
   "assistant": {
     "title": "AI ఆరోగ్య సహాయకుడు",

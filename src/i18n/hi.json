@@ -120,7 +120,17 @@
     "file": "फ़ाइल",
     "camera": "कैमरा",
     "text": "टेक्स्ट",
-    "link": "लिंक"
+    "link": "लिंक",
+    "confirmMedicines": "निकाली गई दवाइयों की पुष्टि करें",
+    "reviewExtracted": "अपने प्रिस्क्रिप्शन से निकाली गई दवाइयों की समीक्षा और पुष्टि करें",
+    "needsReview": "समीक्षा आवश्यक",
+    "medicineName": "दवा का नाम",
+    "dosageLabel": "खुराक",
+    "frequencyLabel": "आवृत्ति",
+    "durationLabel": "अवधि",
+    "confirmAll": "सभी की पुष्टि करें",
+    "reviewRequired": "समीक्षा आवश्यक - कुछ दवाइयों को पुष्टि चाहिए",
+    "warnings": "चेतावनियाँ"
   },
   "assistant": {
     "title": "एआई स्वास्थ्य सहायक",
