@@ -40,7 +40,12 @@
     "carePlan": "Care Plan",
     "precautions": "Precautions",
     "settings": "Settings",
-    "uploadFirst": "Upload a prescription first to unlock this section"
+    "uploadFirst": "Upload a prescription first to unlock this section",
+    "aiFeatures": "AI Features",
+    "emergency": "Emergency SOS",
+    "healthRisk": "Health Risk Score",
+    "interactions": "Medicine Interactions",
+    "healthCoach": "Health Coach"
   },
   "auth": {
     "welcomeBack": "Welcome back",
