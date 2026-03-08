@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n, localeToLanguage } from "@/hooks/useI18n";
 
 const symptomKeys = [
   "fever", "cough", "cold", "headache", "fatigue", "soreThroat",
@@ -23,7 +23,7 @@ export default function SymptomChecker() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Condition[] | null>(null);
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const toggle = (s: string) => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
 
@@ -39,7 +39,7 @@ export default function SymptomChecker() {
       }
 
       const { data, error } = await supabase.functions.invoke("ai-health", {
-        body: { action: "analyze-symptoms", data: { symptoms: selected, other: otherSymptoms } },
+        body: { action: "analyze-symptoms", data: { symptoms: selected, other: otherSymptoms, language: localeToLanguage[locale] } },
       });
 
       if (error || data?.error) throw new Error(data?.error || "Analysis failed");
