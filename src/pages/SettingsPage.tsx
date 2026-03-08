@@ -10,9 +10,6 @@ import { Settings, Loader2, Moon, Sun, Bell, Shield, Watch, Wifi, WifiOff } from
 import { useTheme } from "@/hooks/useTheme";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/hooks/useI18n";
-import { useTheme } from "@/hooks/useTheme";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useI18n } from "@/hooks/useI18n";
 
 export default function SettingsPage() {
   const { profile, refreshProfile } = useAuth();
