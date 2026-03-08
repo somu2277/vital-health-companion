@@ -43,27 +43,77 @@ serve(async (req) => {
 
     switch (action) {
       case "analyze-report": {
-        const systemPrompt = `You are a medical document analyzer. Extract structured information from the following prescription/medical report text. Return ONLY valid JSON with this structure:
+        const lang = data.language || "English";
+        const systemPrompt = `You are a highly accurate medical document analyzer specializing in prescription analysis.
+
+CRITICAL RULES:
+1. Extract EVERY medicine mentioned in the prescription with exact spelling.
+2. Use standard medical/pharmaceutical names (e.g., "Amoxicillin" not "Amoxilin", "Metformin" not "Metforman").
+3. Apply fuzzy matching internally: if OCR text has a misspelling, correct it to the nearest valid medicine name.
+4. For each medicine, provide a confidence score (0-100) based on how clearly it was identified.
+5. If confidence < 90%, set "needs_review": true for that medicine and provide "original_text" showing what OCR detected.
+6. Extract dosage, frequency, and duration precisely. If not specified, mark as "Not specified".
+7. Identify the disease/condition being treated based on the medicines prescribed.
+8. Determine if this is a prescription, lab report, X-ray, or other document type.
+
+IMPORTANT: Respond in ${lang} language for summary and disease fields. Keep medicine names in English (international standard names).
+
+Return ONLY valid JSON:
 {
-  "disease": "string or null",
-  "medicines": [{ "name": "string", "dosage": "string", "frequency": "string", "duration": "string" }],
-  "summary": "brief summary of the report",
-  "report_type": "prescription | lab_report | xray | other"
+  "disease": "identified condition or null",
+  "medicines": [
+    {
+      "name": "corrected standard medicine name",
+      "original_text": "what OCR detected (only if different from name)",
+      "generic_name": "generic/salt name",
+      "dosage": "e.g., 500mg",
+      "frequency": "e.g., twice daily",
+      "duration": "e.g., 7 days",
+      "drug_class": "e.g., Antibiotic, Analgesic",
+      "confidence": 95,
+      "needs_review": false
+    }
+  ],
+  "summary": "brief clinical summary",
+  "report_type": "prescription | lab_report | xray | other",
+  "warnings": ["any drug interaction warnings"],
+  "diet_recommendations": ["disease-specific diet suggestions based on medicines"],
+  "contraindications": ["things to avoid based on prescribed medicines"]
 }`;
         const text = await aiCall(systemPrompt, data.reportText);
-        // Extract JSON from response
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         result = jsonMatch ? JSON.parse(jsonMatch[0]) : { error: "Could not parse AI response" };
         break;
       }
 
       case "predict-disease-stage": {
-        const systemPrompt = `You are a medical AI system. Based on the disease, medicines, and symptoms provided, predict the disease stage. Return ONLY valid JSON:
+        const lang = data.language || "English";
+        const systemPrompt = `You are a medical AI system specializing in disease staging.
+
+Analyze the following data to predict disease stage:
+- Disease name
+- Prescribed medicines and their dosages
+- Patient symptoms
+- Patient age and medical history
+
+STAGING CRITERIA:
+- Early Stage: Mild symptoms, basic medication, high recovery potential
+- Moderate Stage: Multiple symptoms, combination therapy, moderate disease progression
+- Advanced Stage: Severe symptoms, aggressive treatment, significant organ involvement
+- Recovery Stage: Improving markers, reduced medication, positive trajectory
+
+Base your confidence on the quality and completeness of available data.
+
+IMPORTANT: Respond in ${lang} language.
+
+Return ONLY valid JSON:
 {
   "disease": "string",
-  "stage": "Stage 1 | Stage 2 | Stage 3 | Recovery",
+  "stage": "Early Stage | Moderate Stage | Advanced Stage | Recovery Stage",
   "confidence": number (0-100),
-  "explanation": "brief explanation"
+  "explanation": "detailed reasoning for this staging",
+  "key_indicators": ["indicator1", "indicator2"],
+  "recommended_actions": ["action1", "action2"]
 }`;
         const text = await aiCall(systemPrompt, JSON.stringify(data));
         const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -72,13 +122,38 @@ serve(async (req) => {
       }
 
       case "generate-care-plan": {
-        const systemPrompt = `You are an AI healthcare planner. Generate a comprehensive care plan. Return ONLY valid JSON:
+        const lang = data.language || "English";
+        const systemPrompt = `You are an AI healthcare planner creating evidence-based personalized care plans.
+
+Generate a comprehensive care plan considering:
+- The specific disease and its stage
+- Prescribed medicines and their interactions
+- Patient age and profile
+- Drug-specific dietary restrictions (e.g., no grapefruit with statins, low sugar for diabetes meds)
+- Exercise limitations based on condition
+
+DIET RULES:
+- If diabetes medicines (Metformin, Glipizide, etc.): Low glycemic index diet, limit refined carbs
+- If hypertension medicines (Amlodipine, Losartan, etc.): Low sodium diet (<2300mg/day), DASH diet
+- If cholesterol medicines (Atorvastatin, etc.): Low saturated fat, avoid grapefruit
+- If kidney medicines: Limit potassium, phosphorus
+- If liver medicines: Avoid alcohol completely
+- If antibiotics: Include probiotics, avoid dairy near dose times
+- If blood thinners (Warfarin): Consistent vitamin K intake
+
+IMPORTANT: Respond in ${lang} language.
+
+Return ONLY valid JSON:
 {
-  "diet": ["suggestion1", "suggestion2"],
-  "exercise": ["suggestion1", "suggestion2"],
-  "sleep": ["suggestion1", "suggestion2"],
-  "medication_schedule": ["schedule1", "schedule2"],
-  "followups": ["followup1", "followup2"]
+  "diet": ["specific dietary suggestion with reasoning"],
+  "foods_to_avoid": ["food1 - reason", "food2 - reason"],
+  "foods_to_include": ["food1 - benefit", "food2 - benefit"],
+  "exercise": ["exercise suggestion with duration and frequency"],
+  "sleep": ["sleep hygiene recommendation"],
+  "medication_schedule": ["specific time-based schedule"],
+  "followups": ["followup recommendation with timeline"],
+  "lifestyle_changes": ["specific lifestyle modification"],
+  "warning_signs": ["symptoms to watch for that need immediate attention"]
 }`;
         const text = await aiCall(systemPrompt, JSON.stringify(data));
         const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -87,17 +162,86 @@ serve(async (req) => {
       }
 
       case "generate-precautions": {
-        const systemPrompt = `You are a medical advisor. Generate precautions based on disease and medicines. Return ONLY a JSON array of strings: ["precaution1", "precaution2", ...]`;
+        const lang = data.language || "English";
+        const systemPrompt = `You are a medical safety advisor generating critical precautions.
+
+Based on the patient's diseases and medicines, generate specific, actionable precautions.
+
+Categories to cover:
+1. Drug interaction warnings
+2. Food-drug interactions  
+3. Activity restrictions
+4. Side effect monitoring
+5. Emergency warning signs
+6. Lifestyle precautions
+
+IMPORTANT: Respond in ${lang} language.
+
+Return ONLY a JSON array of objects:
+[
+  {"category": "Drug Interaction", "precaution": "specific precaution text", "severity": "high|medium|low"},
+  ...
+]`;
         const text = await aiCall(systemPrompt, JSON.stringify(data));
-        const jsonMatch = text.match(/\[[\s\S]*\]/);
-        result = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+        // Try array first, then object
+        const arrayMatch = text.match(/\[[\s\S]*\]/);
+        if (arrayMatch) {
+          result = JSON.parse(arrayMatch[0]);
+        } else {
+          result = [];
+        }
+        break;
+      }
+
+      case "generate-reminders": {
+        const systemPrompt = `You are a medication scheduling assistant. Based on the medicine frequency, generate specific reminder times.
+
+Rules:
+- "once daily" or "OD": 8:00 AM
+- "twice daily" or "BD": 8:00 AM, 8:00 PM  
+- "thrice daily" or "TDS" or "TID": 8:00 AM, 2:00 PM, 8:00 PM
+- "four times daily" or "QID": 8:00 AM, 12:00 PM, 4:00 PM, 8:00 PM
+- "before meals": 30 minutes before typical meal times
+- "after meals": 30 minutes after typical meal times
+- "at bedtime" or "HS": 10:00 PM
+- "every X hours": space evenly starting from 8:00 AM
+- "SOS" or "as needed": no fixed schedule, mark as "as_needed"
+
+Return ONLY valid JSON:
+{
+  "reminders": [
+    {
+      "medicine_name": "string",
+      "dosage": "string",
+      "times": ["HH:MM"],
+      "instruction": "before meals / after meals / with food / empty stomach",
+      "type": "scheduled | as_needed"
+    }
+  ]
+}`;
+        const text = await aiCall(systemPrompt, JSON.stringify(data));
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        result = jsonMatch ? JSON.parse(jsonMatch[0]) : { reminders: [] };
         break;
       }
 
       case "analyze-symptoms": {
-        const systemPrompt = `You are a diagnostic AI. Given the symptoms, return possible conditions. Return ONLY valid JSON:
+        const lang = data.language || "English";
+        const systemPrompt = `You are a diagnostic AI. Given the symptoms, return possible conditions with clinical reasoning.
+
+IMPORTANT: Respond in ${lang} language.
+
+Return ONLY valid JSON:
 {
-  "possible_conditions": [{ "name": "string", "probability": "high | medium | low", "description": "brief description" }]
+  "possible_conditions": [
+    { 
+      "name": "condition name", 
+      "probability": "high | medium | low", 
+      "description": "brief clinical description",
+      "recommended_tests": ["test1", "test2"],
+      "urgency": "immediate | soon | routine"
+    }
+  ]
 }`;
         const text = await aiCall(systemPrompt, JSON.stringify(data));
         const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -106,12 +250,29 @@ serve(async (req) => {
       }
 
       case "medicine-safety": {
-        const systemPrompt = `You are a pharmaceutical AI assistant. Analyze medicine safety. Return ONLY valid JSON:
+        const lang = data.language || "English";
+        const systemPrompt = `You are a pharmaceutical AI assistant. Analyze medicine safety comprehensively.
+
+Check for:
+1. Known side effects (common and rare)
+2. Drug-drug interactions with commonly prescribed medicines
+3. Food-drug interactions
+4. Contraindications (pregnancy, liver disease, kidney disease, etc.)
+5. Overdose risk and symptoms
+6. Age-specific warnings
+
+IMPORTANT: Respond in ${lang} language.
+
+Return ONLY valid JSON:
 {
   "safety_score": number (0-100),
-  "warnings": ["warning1"],
-  "interactions": ["interaction1"],
-  "side_effects": ["effect1"]
+  "warnings": ["critical warning"],
+  "interactions": ["drug interaction detail"],
+  "side_effects": ["common side effect"],
+  "rare_side_effects": ["rare but serious side effect"],
+  "food_interactions": ["food to avoid"],
+  "contraindications": ["condition where this drug should not be used"],
+  "overdose_symptoms": ["symptom of overdose"]
 }`;
         const text = await aiCall(systemPrompt, JSON.stringify(data));
         const jsonMatch = text.match(/\{[\s\S]*\}/);
