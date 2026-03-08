@@ -39,7 +39,7 @@ export default function SymptomChecker() {
       }
 
       const { data, error } = await supabase.functions.invoke("ai-health", {
-        body: { action: "analyze-symptoms", data: { symptoms: selected, other: otherSymptoms } },
+        body: { action: "analyze-symptoms", data: { symptoms: selected, other: otherSymptoms, language: localeToLanguage[locale] } },
       });
 
       if (error || data?.error) throw new Error(data?.error || "Analysis failed");
