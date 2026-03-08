@@ -27,6 +27,8 @@ import EmergencySOS from "./pages/EmergencySOS";
 import HealthRiskScore from "./pages/HealthRiskScore";
 import MedicineInteractions from "./pages/MedicineInteractions";
 import HealthCoach from "./pages/HealthCoach";
+import ReminderHistory from "./pages/ReminderHistory";
+import ReminderSettings from "./pages/ReminderSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
