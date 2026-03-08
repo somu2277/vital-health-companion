@@ -40,6 +40,13 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
     { to: "/precautions", icon: AlertTriangle, label: t("nav.precautions") },
   ];
 
+  const aiLinks = [
+    { to: "/emergency", icon: Siren, label: t("nav.emergency") },
+    { to: "/health-risk", icon: Activity, label: t("nav.healthRisk") },
+    { to: "/medicine-interactions", icon: Zap, label: t("nav.interactions") },
+    { to: "/health-coach", icon: Lightbulb, label: t("nav.healthCoach") },
+  ];
+
   const NavItem = ({ to, icon: Icon, label, disabled }: { to: string; icon: React.ElementType; label: string; disabled?: boolean }) => {
     const isActive = location.pathname === to;
 
