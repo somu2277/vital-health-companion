@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Upload, Stethoscope, MapPin, MessageSquare, Search, Bell, Droplets, Moon, Footprints, HeartPulse, Pill, AlertTriangle, ClipboardList, Salad, ShieldAlert, Activity } from "lucide-react";
+import { Upload, Stethoscope, MapPin, MessageSquare, Search, HeartPulse, Pill, ClipboardList, Salad, ShieldAlert, Activity } from "lucide-react";
 import { Heart } from "lucide-react";
 import LiveHealthMetrics from "@/components/dashboard/LiveHealthMetrics";
 import QuickReminders from "@/components/dashboard/QuickReminders";
