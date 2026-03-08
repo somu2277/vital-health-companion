@@ -6,10 +6,9 @@ import QuickReminders from "@/components/dashboard/QuickReminders";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
 
 export default function Dashboard() {
