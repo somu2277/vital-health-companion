@@ -16,6 +16,14 @@ type AnalysisResult = {
   report_type?: string;
 };
 
+async function runOCR(file: File): Promise<string> {
+  const { createWorker } = await import("tesseract.js");
+  const worker = await createWorker("eng");
+  const { data: { text } } = await worker.recognize(file);
+  await worker.terminate();
+  return text;
+}
+
 export default function UploadReports() {
   const [files, setFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
@@ -43,16 +51,16 @@ export default function UploadReports() {
   const processReport = async (reportText: string, fileUrl?: string) => {
     if (!user) return;
 
-    setStatus("Analyzing document...");
+    setStatus("Analyzing with AI...");
     setProgress(60);
 
-    // Call AI to analyze
     const { data: aiResult, error: aiError } = await supabase.functions.invoke("ai-health", {
       body: { action: "analyze-report", data: { reportText } },
     });
 
     if (aiError || aiResult?.error) {
       toast.error(aiResult?.error || "AI analysis failed");
+      setUploading(false);
       return;
     }
 
@@ -79,6 +87,16 @@ export default function UploadReports() {
         source_report: files[0]?.name || "text-input",
       }));
       await supabase.from("medicines").insert(medsToInsert);
+
+      // Create medicine reminders as notifications
+      for (const m of aiResult.medicines) {
+        await supabase.from("notifications").insert({
+          user_id: user.id,
+          type: "medicine_reminder",
+          message: `Take ${m.name} (${m.dosage}) - ${m.frequency}`,
+          status: "active",
+        });
+      }
     }
 
     // Save disease stage if disease found
@@ -96,7 +114,9 @@ export default function UploadReports() {
     setResult(aiResult);
     queryClient.invalidateQueries({ queryKey: ["reports"] });
     queryClient.invalidateQueries({ queryKey: ["medicines"] });
-    toast.success("Upload successful!");
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    queryClient.invalidateQueries({ queryKey: ["disease-stages"] });
+    toast.success("Upload & analysis complete!");
   };
 
   const handleUpload = async () => {
@@ -115,17 +135,28 @@ export default function UploadReports() {
 
       if (uploadError) throw uploadError;
 
-      setProgress(30);
-      setStatus("Extracting text...");
+      setProgress(25);
+      setStatus("Extracting text with OCR...");
 
-      // For text/pdf we read directly; for images we send raw text placeholder
       let reportText = "";
       if (file.type.startsWith("text/")) {
         reportText = await file.text();
+      } else if (file.type.startsWith("image/")) {
+        // Use Tesseract.js OCR for images
+        try {
+          reportText = await runOCR(file);
+          if (!reportText.trim()) {
+            reportText = `[Image uploaded: ${file.name}]. Could not extract text via OCR. Please analyze as a medical document image.`;
+          }
+        } catch {
+          reportText = `[Image uploaded: ${file.name}]. OCR failed. Please analyze as a medical document image.`;
+        }
       } else {
-        // For images/PDFs, use file name as context and let AI know
         reportText = `[Uploaded file: ${file.name}, type: ${file.type}, size: ${(file.size / 1024).toFixed(1)}KB]. Please analyze this medical document.`;
       }
+
+      setProgress(45);
+      setStatus("Text extracted. Analyzing...");
 
       const { data: urlData } = supabase.storage.from("medical-reports").getPublicUrl(filePath);
 
@@ -141,6 +172,7 @@ export default function UploadReports() {
     if (!textInput.trim()) return;
     setUploading(true);
     setProgress(10);
+    setStatus("Analyzing text...");
     try {
       await processReport(textInput);
     } catch (err: any) {
@@ -177,9 +209,16 @@ export default function UploadReports() {
             </div>
           )}
 
+          {result.disease && (
+            <div className="mb-4 p-3 rounded-lg border border-border bg-background">
+              <h3 className="font-semibold mb-1">Detected Condition</h3>
+              <p className="text-sm text-primary font-medium">{result.disease}</p>
+            </div>
+          )}
+
           {result.medicines && result.medicines.length > 0 && (
             <div className="mb-4">
-              <h3 className="font-semibold mb-2">Medicines Found</h3>
+              <h3 className="font-semibold mb-2">Medicines Found ({result.medicines.length})</h3>
               {result.medicines.map((m, i) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-border bg-background mb-2">
                   <div className="flex items-center gap-3">
@@ -201,7 +240,7 @@ export default function UploadReports() {
 
           <div className="grid grid-cols-2 gap-4">
             <Button variant="outline" onClick={() => { setResult(null); setFiles([]); setProgress(0); }}>Upload Another</Button>
-            <Button onClick={() => navigate("/history")}>View History</Button>
+            <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
           </div>
         </div>
       </div>
@@ -212,7 +251,7 @@ export default function UploadReports() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Upload Medical Documents</h1>
-        <p className="text-muted-foreground mt-1">Upload your prescriptions, lab reports, or medical images</p>
+        <p className="text-muted-foreground mt-1">Upload your prescriptions, lab reports, or medical images for AI analysis</p>
       </div>
 
       <div className="border border-border rounded-xl bg-card p-6">
@@ -234,7 +273,7 @@ export default function UploadReports() {
             >
               <Upload className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
               <p className="font-medium">Drag and drop files here, or click to browse</p>
-              <p className="text-sm text-muted-foreground mt-1">Supported: PDF, JPG, PNG, TXT</p>
+              <p className="text-sm text-muted-foreground mt-1">Supported: PDF, JPG, PNG, TXT · OCR enabled for images</p>
               <input id="file-input" type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.txt" onChange={handleFileSelect} />
             </div>
           </TabsContent>
@@ -251,7 +290,7 @@ export default function UploadReports() {
               value={textInput}
               onChange={e => setTextInput(e.target.value)}
               className="w-full h-40 p-4 rounded-xl border border-border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Paste your medical report text here..."
+              placeholder="Paste your medical report or prescription text here..."
             />
             <Button className="w-full mt-4 h-12 gap-2" onClick={handleTextSubmit} disabled={!textInput.trim() || uploading}>
               {uploading ? <><Loader2 className="h-5 w-5 animate-spin" /> Analyzing...</> : <><Upload className="h-5 w-5" /> Analyze Text</>}
@@ -284,15 +323,15 @@ export default function UploadReports() {
         {uploading && (
           <div className="mt-4">
             <div className="w-full bg-muted rounded-full h-2 mb-2">
-              <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${progress}%` }} />
+              <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
-            <p className="text-sm text-center text-muted-foreground">{status} {progress}%</p>
+            <p className="text-sm text-center text-muted-foreground">{status} ({progress}%)</p>
           </div>
         )}
 
         {!uploading && files.length > 0 && (
           <Button className="w-full mt-6 h-12 text-base gap-2" onClick={handleUpload}>
-            <Upload className="h-5 w-5" /> Upload
+            <Upload className="h-5 w-5" /> Upload & Analyze
           </Button>
         )}
       </div>
