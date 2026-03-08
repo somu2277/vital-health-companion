@@ -479,5 +479,38 @@
     "medicine": "Medicine",
     "sleep": "Sleep",
     "activity": "Activity"
+  },
+  "reminderHistory": {
+    "title": "Reminder History",
+    "description": "View your completed and dismissed reminders",
+    "allTypes": "All Types",
+    "pickDate": "Pick a date",
+    "clearDate": "Clear",
+    "noHistory": "No reminder history",
+    "noHistoryDesc": "Completed and dismissed reminders will appear here",
+    "completed": "Completed",
+    "dismissed": "Dismissed"
+  },
+  "reminderSettings": {
+    "title": "Reminder Settings",
+    "description": "Configure your reminder preferences",
+    "types": "Reminder Types",
+    "waterDesc": "Get reminded to drink water regularly",
+    "medicineDesc": "Reminders based on your prescriptions",
+    "sleepDesc": "Sleep reminders based on wearable data",
+    "activityDesc": "Activity reminders when steps are low",
+    "frequency": "Frequency",
+    "waterInterval": "Water reminder interval",
+    "hour": "hour",
+    "hours": "hours",
+    "quietHours": "Quiet Hours",
+    "quietDesc": "No reminders will be sent during quiet hours",
+    "from": "From",
+    "to": "To",
+    "saved": "Reminder settings saved!"
+  },
+  "nav2": {
+    "reminderHistory": "Reminder History",
+    "reminderSettings": "Reminder Settings"
   }
 }
