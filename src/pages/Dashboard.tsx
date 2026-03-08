@@ -59,12 +59,6 @@ export default function Dashboard() {
   const hasUploads = reports && reports.length > 0;
   const hasHealthProfile = !!healthProfile;
 
-  const addReminder = async (type: string, message: string) => {
-    if (!user) return;
-    await supabase.from("notifications").insert({ user_id: user.id, type, message, status: "active" });
-    queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    toast.success(`Reminder added: ${message}`);
-  };
 
   const stageColor = (stage: string | null) => {
     if (!stage) return "text-muted-foreground";
