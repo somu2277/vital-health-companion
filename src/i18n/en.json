@@ -417,11 +417,5 @@
     "carePlanReady": "Care plan generated",
     "dietReady": "Diet plan ready",
     "precautionsReady": "Precautions generated"
-  },
-  "dashboard": {
-    "noHealthData": "No Health Data Yet",
-    "uploadToUnlock": "Upload a prescription to unlock your personalized My Health dashboard with disease staging, care plans, diet recommendations, and precautions.",
-    "viewFull": "View full details",
-    "dietPlan": "Diet Plan"
   }
 }
