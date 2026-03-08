@@ -301,6 +301,77 @@ Return ONLY valid JSON:
         break;
       }
 
+      case "health-risk-score": {
+        const lang = data.language || "English";
+        const systemPrompt = `You are a health risk assessment AI. Analyze patient data to calculate a health risk score.
+
+Consider: age, current medicines, reported symptoms, lifestyle factors.
+
+IMPORTANT: Respond in ${lang} language (except JSON keys).
+
+Return ONLY valid JSON:
+{
+  "overall_score": number (0-100, higher = healthier),
+  "risk_level": "Low Risk | Moderate Risk | High Risk",
+  "factors": [
+    { "name": "factor name", "score": number (0-100), "status": "good | moderate | poor", "detail": "explanation" }
+  ],
+  "recommendations": ["actionable recommendation"],
+  "future_risks": [
+    { "condition": "disease name", "probability": "low | moderate | high", "timeframe": "time estimate" }
+  ]
+}`;
+        const text = await aiCall(systemPrompt, JSON.stringify(data));
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        result = jsonMatch ? JSON.parse(jsonMatch[0]) : { overall_score: 50, risk_level: "Moderate Risk", factors: [], recommendations: [] };
+        break;
+      }
+
+      case "check-interactions": {
+        const lang = data.language || "English";
+        const systemPrompt = `You are a pharmacology AI specializing in drug interactions. Check ALL pairwise interactions between the given medicines.
+
+IMPORTANT: Respond in ${lang} language (except JSON keys).
+
+Return ONLY valid JSON:
+{
+  "interactions": [
+    {
+      "medicine_a": "name",
+      "medicine_b": "name",
+      "severity": "safe | moderate | dangerous",
+      "description": "interaction detail",
+      "recommendation": "what to do"
+    }
+  ]
+}`;
+        const text = await aiCall(systemPrompt, JSON.stringify(data));
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        result = jsonMatch ? JSON.parse(jsonMatch[0]) : { interactions: [] };
+        break;
+      }
+
+      case "health-coach": {
+        const lang = data.language || "English";
+        const systemPrompt = `You are an AI health coach. Generate 6-8 personalized daily health tips based on the patient's medicines and conditions.
+
+Categories: hydration, sleep, activity, nutrition, medication, heart
+Priority: high, medium, low
+
+IMPORTANT: Respond in ${lang} language (except JSON keys and icon values).
+
+Return ONLY valid JSON:
+{
+  "tips": [
+    { "category": "category label", "tip": "personalized health tip", "icon": "hydration|sleep|activity|nutrition|medication|heart", "priority": "high|medium|low" }
+  ]
+}`;
+        const text = await aiCall(systemPrompt, JSON.stringify(data));
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        result = jsonMatch ? JSON.parse(jsonMatch[0]) : { tips: [] };
+        break;
+      }
+
       case "chat": {
         const lang = data.language || "English";
         const systemPrompt = `You are a helpful AI health assistant called VitalWave AI. You can only help with medical and health-related questions. If asked about non-health topics, politely redirect. Keep answers clear, concise, and always include a disclaimer to consult a doctor. Format responses in markdown. IMPORTANT: Respond in ${lang} language.`;

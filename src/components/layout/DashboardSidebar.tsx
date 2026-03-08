@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings, X, Lock } from "lucide-react";
+import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings, X, Lock, Siren, Activity, Lightbulb, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/hooks/useI18n";
 import { useQuery } from "@tanstack/react-query";
@@ -38,6 +38,13 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
     { to: "/disease-stage", icon: HeartPulse, label: t("nav.diseaseStage") },
     { to: "/care-plan", icon: ClipboardList, label: t("nav.carePlan") },
     { to: "/precautions", icon: AlertTriangle, label: t("nav.precautions") },
+  ];
+
+  const aiLinks = [
+    { to: "/emergency", icon: Siren, label: t("nav.emergency") },
+    { to: "/health-risk", icon: Activity, label: t("nav.healthRisk") },
+    { to: "/medicine-interactions", icon: Zap, label: t("nav.interactions") },
+    { to: "/health-coach", icon: Lightbulb, label: t("nav.healthCoach") },
   ];
 
   const NavItem = ({ to, icon: Icon, label, disabled }: { to: string; icon: React.ElementType; label: string; disabled?: boolean }) => {
@@ -101,6 +108,11 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
           {t("nav.myHealth")} {!hasPrescriptions && <Lock className="h-3 w-3 inline ml-1" />}
         </p>
         {healthLinks.map(link => <NavItem key={link.to} {...link} disabled={!hasPrescriptions} />)}
+
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted px-4 mt-6 mb-2">
+          {t("nav.aiFeatures")}
+        </p>
+        {aiLinks.map(link => <NavItem key={link.to} {...link} />)}
       </nav>
 
       <div className="px-3 pb-4">
