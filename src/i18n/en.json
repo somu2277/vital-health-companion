@@ -39,7 +39,8 @@
     "diseaseStage": "Disease Stage",
     "carePlan": "Care Plan",
     "precautions": "Precautions",
-    "settings": "Settings"
+    "settings": "Settings",
+    "uploadFirst": "Upload a prescription first to unlock this section"
   },
   "auth": {
     "welcomeBack": "Welcome back",
