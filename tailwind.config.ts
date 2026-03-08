@@ -56,6 +56,31 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+          muted: "hsl(var(--sidebar-muted))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+        feature: {
+          upload: "hsl(var(--feature-upload))",
+          "upload-icon": "hsl(var(--feature-upload-icon))",
+          doctor: "hsl(var(--feature-doctor))",
+          "doctor-icon": "hsl(var(--feature-doctor-icon))",
+          hospital: "hsl(var(--feature-hospital))",
+          "hospital-icon": "hsl(var(--feature-hospital-icon))",
+          ai: "hsl(var(--feature-ai))",
+          "ai-icon": "hsl(var(--feature-ai-icon))",
+          symptom: "hsl(var(--feature-symptom))",
+          "symptom-icon": "hsl(var(--feature-symptom-icon))",
         },
       },
       borderRadius: {
