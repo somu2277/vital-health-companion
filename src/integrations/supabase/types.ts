@@ -14,7 +14,231 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      care_plans: {
+        Row: {
+          created_at: string | null
+          disease: string | null
+          id: string
+          plan: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          disease?: string | null
+          id?: string
+          plan?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          disease?: string | null
+          id?: string
+          plan?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      disease_stages: {
+        Row: {
+          confidence: number | null
+          created_at: string | null
+          disease: string
+          id: string
+          stage: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string | null
+          disease: string
+          id?: string
+          stage?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string | null
+          disease?: string
+          id?: string
+          stage?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      medical_reports: {
+        Row: {
+          created_at: string | null
+          file_url: string | null
+          id: string
+          report_text: string | null
+          report_type: string | null
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_url?: string | null
+          id?: string
+          report_text?: string | null
+          report_type?: string | null
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_url?: string | null
+          id?: string
+          report_text?: string | null
+          report_type?: string | null
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      medicines: {
+        Row: {
+          created_at: string | null
+          dosage: string | null
+          duration: string | null
+          frequency: string | null
+          id: string
+          name: string
+          source_report: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dosage?: string | null
+          duration?: string | null
+          frequency?: string | null
+          id?: string
+          name: string
+          source_report?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dosage?: string | null
+          duration?: string | null
+          frequency?: string | null
+          id?: string
+          name?: string
+          source_report?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string | null
+          schedule_time: string | null
+          status: string | null
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          schedule_time?: string | null
+          status?: string | null
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          schedule_time?: string | null
+          status?: string | null
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      precautions: {
+        Row: {
+          created_at: string | null
+          disease: string | null
+          id: string
+          precaution: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          disease?: string | null
+          id?: string
+          precaution: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          disease?: string | null
+          id?: string
+          precaution?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          created_at: string | null
+          email: string | null
+          gender: string | null
+          id: string
+          location: string | null
+          name: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string | null
+          email?: string | null
+          gender?: string | null
+          id?: string
+          location?: string | null
+          name?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          created_at?: string | null
+          email?: string | null
+          gender?: string | null
+          id?: string
+          location?: string | null
+          name?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      symptoms: {
+        Row: {
+          created_at: string | null
+          id: string
+          symptom: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          symptom: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          symptom?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
