@@ -97,7 +97,11 @@
     "drinkWater": "Drink a glass of water",
     "sleepReminder": "Time to prepare for bed",
     "walkReminder": "Take a 10-minute walk",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "noHealthData": "No Health Data Yet",
+    "uploadToUnlock": "Upload a prescription to unlock your personalized My Health dashboard with disease staging, care plans, diet recommendations, and precautions.",
+    "viewFull": "View full details",
+    "dietPlan": "Diet Plan"
   },
   "upload": {
     "title": "Upload Medical Documents",
@@ -397,5 +401,21 @@
     "refresh": "New Tips",
     "generating": "Generating personalized tips...",
     "noTips": "Could not generate tips. Try again later."
+  },
+  "pipeline": {
+    "title": "Analyzing Your Prescription",
+    "subtitle": "Please wait while we process your prescription through our AI health engine...",
+    "extractingText": "Extracting text from document",
+    "analyzingPrescription": "AI analyzing prescription",
+    "extractingMedicines": "Extracting & saving medicines",
+    "predictingStage": "Predicting disease stage",
+    "generatingCarePlan": "Generating care plan & diet",
+    "generatingPrecautions": "Generating safety precautions",
+    "savingResults": "Saving health profile",
+    "complete": "Health Profile Complete",
+    "stageAnalyzed": "Disease stage analyzed",
+    "carePlanReady": "Care plan generated",
+    "dietReady": "Diet plan ready",
+    "precautionsReady": "Precautions generated"
   }
 }

@@ -65,6 +65,51 @@ export type Database = {
         }
         Relationships: []
       }
+      health_profiles: {
+        Row: {
+          care_plan: Json | null
+          created_at: string | null
+          diet_plan: Json | null
+          disease: string | null
+          id: string
+          last_updated: string | null
+          medicines: Json | null
+          precautions: Json | null
+          stage: string | null
+          stage_confidence: number | null
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          care_plan?: Json | null
+          created_at?: string | null
+          diet_plan?: Json | null
+          disease?: string | null
+          id?: string
+          last_updated?: string | null
+          medicines?: Json | null
+          precautions?: Json | null
+          stage?: string | null
+          stage_confidence?: number | null
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          care_plan?: Json | null
+          created_at?: string | null
+          diet_plan?: Json | null
+          disease?: string | null
+          id?: string
+          last_updated?: string | null
+          medicines?: Json | null
+          precautions?: Json | null
+          stage?: string | null
+          stage_confidence?: number | null
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       medical_reports: {
         Row: {
           created_at: string | null

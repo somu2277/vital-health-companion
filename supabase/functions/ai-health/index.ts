@@ -351,6 +351,65 @@ Return ONLY valid JSON:
         break;
       }
 
+      case "full-prescription-analysis": {
+        const lang = data.language || "English";
+        // Step 1: Predict disease stage
+        const stagePrompt = `You are a medical AI. Analyze the disease "${data.disease}" with medicines: ${JSON.stringify(data.medicines)}. Patient age: ${data.age || "unknown"}.
+
+IMPORTANT: Respond in ${lang} language (except JSON keys).
+
+Return ONLY valid JSON:
+{
+  "stage": "Early Stage | Moderate Stage | Advanced Stage | Recovery Stage",
+  "confidence": number (0-100),
+  "explanation": "reasoning"
+}`;
+        const stageText = await aiCall(stagePrompt, JSON.stringify(data));
+        const stageMatch = stageText.match(/\{[\s\S]*\}/);
+        const stageResult = stageMatch ? JSON.parse(stageMatch[0]) : { stage: "Unknown", confidence: 50 };
+
+        // Step 2: Generate care plan + diet
+        const carePlanPrompt = `You are an AI healthcare planner. Generate a care plan for "${data.disease}" (${stageResult.stage}) with medicines: ${JSON.stringify(data.medicines)}.
+
+Include diet plan, exercise, sleep, medication schedule, followups, foods to avoid, foods to include.
+
+IMPORTANT: Respond in ${lang} language (except JSON keys).
+
+Return ONLY valid JSON:
+{
+  "diet": ["suggestion"],
+  "foods_to_avoid": ["food - reason"],
+  "foods_to_include": ["food - benefit"],
+  "exercise": ["exercise"],
+  "sleep": ["sleep tip"],
+  "medication_schedule": ["schedule"],
+  "followups": ["followup"],
+  "lifestyle_changes": ["change"],
+  "warning_signs": ["sign"]
+}`;
+        const careText = await aiCall(carePlanPrompt, JSON.stringify(data));
+        const careMatch = careText.match(/\{[\s\S]*\}/);
+        const careResult = careMatch ? JSON.parse(careMatch[0]) : {};
+
+        // Step 3: Generate precautions
+        const precautionsPrompt = `You are a medical safety advisor. Generate precautions for disease "${data.disease}" with medicines: ${JSON.stringify(data.medicines)}.
+
+IMPORTANT: Respond in ${lang} language (except JSON keys).
+
+Return ONLY a JSON array:
+[{"category": "string", "precaution": "string", "severity": "high|medium|low"}]`;
+        const precText = await aiCall(precautionsPrompt, JSON.stringify(data));
+        const precMatch = precText.match(/\[[\s\S]*\]/);
+        const precResult = precMatch ? JSON.parse(precMatch[0]) : [];
+
+        result = {
+          stage: stageResult,
+          care_plan: careResult,
+          precautions: precResult,
+        };
+        break;
+      }
+
       case "health-coach": {
         const lang = data.language || "English";
         const systemPrompt = `You are an AI health coach. Generate 6-8 personalized daily health tips based on the patient's medicines and conditions.

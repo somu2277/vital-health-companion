@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Upload, Stethoscope, MapPin, MessageSquare, Search, Bell, Droplets, Moon, Footprints, HeartPulse, Pill, AlertTriangle } from "lucide-react";
+import { Upload, Stethoscope, MapPin, MessageSquare, Search, Bell, Droplets, Moon, Footprints, HeartPulse, Pill, AlertTriangle, ClipboardList, Salad, ShieldAlert, Activity } from "lucide-react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -53,26 +53,62 @@ export default function Dashboard() {
     },
   });
 
-  const { data: diseases } = useQuery({
-    queryKey: ["disease-stages"],
+  const { data: healthProfile } = useQuery({
+    queryKey: ["health-profile"],
     queryFn: async () => {
-      const { data } = await supabase.from("disease_stages").select("*").order("created_at", { ascending: false }).limit(3);
-      return data || [];
+      const { data } = await supabase
+        .from("health_profiles")
+        .select("*")
+        .order("last_updated", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
     },
   });
 
   const hasUploads = reports && reports.length > 0;
+  const hasHealthProfile = !!healthProfile;
 
   const addReminder = async (type: string, message: string) => {
     if (!user) return;
-    await supabase.from("notifications").insert({
-      user_id: user.id,
-      type,
-      message,
-      status: "active",
-    });
+    await supabase.from("notifications").insert({ user_id: user.id, type, message, status: "active" });
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
     toast.success(`Reminder added: ${message}`);
+  };
+
+  const stageColor = (stage: string | null) => {
+    if (!stage) return "text-muted-foreground";
+    if (stage.toLowerCase().includes("early") || stage.toLowerCase().includes("recovery")) return "text-success";
+    if (stage.toLowerCase().includes("moderate")) return "text-warning";
+    return "text-destructive";
+  };
+
+  const renderCarePlanPreview = (plan: any) => {
+    if (!plan || typeof plan !== "object") return null;
+    const diet = plan.diet || [];
+    const exercise = plan.exercise || [];
+    const items = [...diet.slice(0, 2), ...exercise.slice(0, 1)];
+    if (items.length === 0) return null;
+    return (
+      <ul className="space-y-1 mt-2">
+        {items.map((item: string, i: number) => (
+          <li key={i} className="text-xs text-muted-foreground truncate">• {item}</li>
+        ))}
+      </ul>
+    );
+  };
+
+  const renderPrecautionsPreview = (precs: any) => {
+    if (!precs || !Array.isArray(precs)) return null;
+    return (
+      <ul className="space-y-1 mt-2">
+        {precs.slice(0, 2).map((p: any, i: number) => (
+          <li key={i} className="text-xs text-muted-foreground truncate">
+            • {typeof p === "string" ? p : p.precaution}
+          </li>
+        ))}
+      </ul>
+    );
   };
 
   return (
@@ -99,6 +135,92 @@ export default function Dashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* My Health Section - only shown when health profile exists */}
+      {hasHealthProfile && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="border border-primary/20 rounded-xl p-6 bg-primary/5"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">{t("nav.myHealth")}</h2>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {healthProfile.last_updated ? format(new Date(healthProfile.last_updated), "MMM d, yyyy h:mm a") : ""}
+            </span>
+          </div>
+
+          {/* Disease & Stage */}
+          <div className="grid md:grid-cols-4 gap-4">
+            <Link to="/disease-stage" className="p-4 rounded-xl border border-border bg-card hover:shadow-md transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <HeartPulse className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">{t("nav.diseaseStage")}</span>
+              </div>
+              <p className="text-sm font-medium">{healthProfile.disease}</p>
+              <p className={`text-xs font-semibold mt-1 ${stageColor(healthProfile.stage)}`}>
+                {healthProfile.stage}
+                {healthProfile.stage_confidence ? ` (${healthProfile.stage_confidence}%)` : ""}
+              </p>
+            </Link>
+
+            <Link to="/care-plan" className="p-4 rounded-xl border border-border bg-card hover:shadow-md transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <ClipboardList className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">{t("nav.carePlan")}</span>
+              </div>
+              {renderCarePlanPreview(healthProfile.care_plan)}
+              <p className="text-xs text-primary mt-2 font-medium">{t("dashboard.viewFull")} →</p>
+            </Link>
+
+            <Link to="/care-plan" className="p-4 rounded-xl border border-border bg-card hover:shadow-md transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <Salad className="h-4 w-4 text-success" />
+                <span className="text-sm font-semibold">{t("dashboard.dietPlan")}</span>
+              </div>
+              {healthProfile.diet_plan && typeof healthProfile.diet_plan === "object" && (
+                <ul className="space-y-1 mt-2">
+                  {((healthProfile.diet_plan as any)?.foods_to_avoid || []).slice(0, 2).map((f: string, i: number) => (
+                    <li key={i} className="text-xs text-muted-foreground truncate">🚫 {f}</li>
+                  ))}
+                  {((healthProfile.diet_plan as any)?.foods_to_include || []).slice(0, 1).map((f: string, i: number) => (
+                    <li key={i} className="text-xs text-muted-foreground truncate">✅ {f}</li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-xs text-primary mt-2 font-medium">{t("dashboard.viewFull")} →</p>
+            </Link>
+
+            <Link to="/precautions" className="p-4 rounded-xl border border-border bg-card hover:shadow-md transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldAlert className="h-4 w-4 text-warning" />
+                <span className="text-sm font-semibold">{t("nav.precautions")}</span>
+              </div>
+              {renderPrecautionsPreview(healthProfile.precautions)}
+              <p className="text-xs text-primary mt-2 font-medium">{t("dashboard.viewFull")} →</p>
+            </Link>
+          </div>
+        </motion.div>
+      )}
+
+      {/* No prescription uploaded prompt */}
+      {!hasUploads && !hasHealthProfile && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="border border-dashed border-primary/30 rounded-xl p-8 bg-primary/5 text-center"
+        >
+          <Upload className="h-12 w-12 mx-auto mb-3 text-primary/40" />
+          <h3 className="font-semibold text-lg">{t("dashboard.noHealthData")}</h3>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">{t("dashboard.uploadToUnlock")}</p>
+          <Button asChild>
+            <Link to="/upload">{t("dashboard.uploadReport")}</Link>
+          </Button>
+        </motion.div>
+      )}
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2 border border-border rounded-xl p-6 bg-card">
@@ -128,28 +250,6 @@ export default function Dashboard() {
               <Upload className="h-10 w-10 mb-3 opacity-40" />
               <p className="font-medium">{t("dashboard.noUploads")}</p>
               <p className="text-sm mt-1">{t("dashboard.firstUpload")}</p>
-            </div>
-          )}
-
-          {hasUploads && diseases && diseases.length > 0 && (
-            <div className="mt-6 pt-4 border-t border-border">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <HeartPulse className="h-4 w-4 text-primary" /> {t("nav.myHealth")}
-              </h3>
-              <div className="grid grid-cols-3 gap-3">
-                <Link to="/disease-stage" className="p-3 rounded-lg border border-border bg-background hover:bg-accent/30 transition-colors text-center text-sm">
-                  <HeartPulse className="h-5 w-5 mx-auto mb-1 text-primary" />
-                  {t("nav.diseaseStage")}
-                </Link>
-                <Link to="/care-plan" className="p-3 rounded-lg border border-border bg-background hover:bg-accent/30 transition-colors text-center text-sm">
-                  <Heart className="h-5 w-5 mx-auto mb-1 text-primary" />
-                  {t("nav.carePlan")}
-                </Link>
-                <Link to="/precautions" className="p-3 rounded-lg border border-border bg-background hover:bg-accent/30 transition-colors text-center text-sm">
-                  <AlertTriangle className="h-5 w-5 mx-auto mb-1 text-warning" />
-                  {t("nav.precautions")}
-                </Link>
-              </div>
             </div>
           )}
         </div>
