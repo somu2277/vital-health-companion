@@ -31,6 +31,7 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
     { to: "/history", icon: Clock, label: t("nav.history") },
     { to: "/symptoms", icon: Search, label: t("nav.symptoms") },
     { to: "/medicine-safety", icon: Shield, label: t("nav.medicineSafety") },
+    { to: "/reminder-history", icon: History, label: t("nav.reminderHistory") },
     { to: "/help", icon: HelpCircle, label: t("nav.help") },
   ];
 
