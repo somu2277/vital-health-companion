@@ -25,11 +25,6 @@ export default function Dashboard() {
     { to: "/symptoms", icon: Search, label: t("dashboard.symptomChecker"), bg: "bg-feature-symptom", iconColor: "text-feature-symptom-icon" },
   ];
 
-  const defaultReminders = [
-    { type: "water", icon: Droplets, message: t("dashboard.drinkWater"), color: "text-info" },
-    { type: "sleep", icon: Moon, message: t("dashboard.sleepReminder"), color: "text-feature-ai-icon" },
-    { type: "exercise", icon: Footprints, message: t("dashboard.walkReminder"), color: "text-success" },
-  ];
 
   const { data: reports } = useQuery({
     queryKey: ["reports"],
