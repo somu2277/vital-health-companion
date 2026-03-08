@@ -192,14 +192,35 @@
   },
   "medicineSafety": {
     "title": "Medicine Safety",
-    "description": "Check medicine safety, interactions, and warnings",
-    "enterMedicine": "Enter medicine name...",
-    "checkSafety": "Check Safety",
-    "safetyScore": "Safety Score",
+    "description": "Verify medicine authenticity and report concerns",
+    "authenticityChecker": "AI Medicine Authenticity Checker",
+    "authenticityDesc": "Verify if your medicine is likely genuine or potentially at risk. This is an AI-assisted analysis based on medicine metadata and packaging details.",
+    "verifyAuthenticity": "Verify Authenticity",
+    "verificationComplete": "Verification complete!",
+    "confidence": "Confidence",
+    "riskLevel": "Risk Level",
+    "verificationDetails": "Verification Details",
     "warnings": "Warnings",
-    "interactions": "Drug Interactions",
-    "sideEffects": "Side Effects",
-    "enterToCheck": "Enter a medicine to check its safety"
+    "recommendations": "Recommendations",
+    "safetyInfo": "Fake medicines can be dangerous to your health. Always buy from licensed pharmacists. If you suspect a medicine is fake, do not consume it and report it to your local drug regulatory authority.",
+    "fields": {
+      "medicineName": "Medicine Name",
+      "manufacturer": "Manufacturer",
+      "batchNumber": "Batch Number",
+      "expiryDate": "Expiry Date",
+      "purchaseSource": "Purchase Source",
+      "packagingText": "Packaging Text",
+      "optional": "Optional",
+      "packagingPlaceholder": "Paste any text visible on the packaging (spellings, labels)..."
+    },
+    "pipeline": {
+      "validate": "Validating medicine name...",
+      "manufacturer": "Verifying manufacturer...",
+      "batch": "Checking batch number...",
+      "expiry": "Checking expiry date...",
+      "packaging": "Analyzing packaging text...",
+      "result": "Generating authenticity report..."
+    }
   },
   "diseaseStage": {
     "title": "Disease Stage",

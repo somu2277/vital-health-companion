@@ -410,6 +410,42 @@ Return ONLY a JSON array:
         break;
       }
 
+      case "verify-medicine-authenticity": {
+        const lang = data.language || "English";
+        const systemPrompt = `You are a pharmaceutical authenticity verification AI. Analyze medicine details to predict whether the medicine is genuine or potentially fake/counterfeit.
+
+Verification checks:
+1. Medicine Name: Validate against known pharmaceutical database. Check if name, strength, dosage form are standard.
+2. Manufacturer: Compare against known pharmaceutical companies globally.
+3. Batch Number: Check format validity (most use alphanumeric 6-12 chars). Flag suspicious patterns.
+4. Expiry Date: Flag if expired or suspiciously far in future (>5 years).
+5. Packaging Text: Detect spelling errors, grammar issues, or suspicious text that indicate counterfeit.
+6. Purchase Source: Higher risk for street vendors or unknown sources.
+
+IMPORTANT: Respond in ${lang} language (except JSON keys).
+
+Return ONLY valid JSON:
+{
+  "authenticity": "Likely Genuine | Suspicious | High Risk - Possible Fake",
+  "risk_level": "Low | Medium | High",
+  "confidence": number (0-100),
+  "warnings": ["specific warning"],
+  "details": {
+    "name_check": { "status": "pass|warning|fail", "detail": "explanation" },
+    "manufacturer_check": { "status": "pass|warning|fail", "detail": "explanation" },
+    "batch_check": { "status": "pass|warning|fail", "detail": "explanation" },
+    "expiry_check": { "status": "pass|warning|fail", "detail": "explanation" },
+    "packaging_check": { "status": "pass|warning|fail", "detail": "explanation" },
+    "source_check": { "status": "pass|warning|fail", "detail": "explanation" }
+  },
+  "recommendations": ["actionable recommendation"]
+}`;
+        const text = await aiCall(systemPrompt, JSON.stringify(data));
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        result = jsonMatch ? JSON.parse(jsonMatch[0]) : { error: "Could not parse" };
+        break;
+      }
+
       case "health-coach": {
         const lang = data.language || "English";
         const systemPrompt = `You are an AI health coach. Generate 6-8 personalized daily health tips based on the patient's medicines and conditions.
