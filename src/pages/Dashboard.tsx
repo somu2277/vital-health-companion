@@ -137,6 +137,9 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Live Health Metrics from Smartwatch */}
+      <LiveHealthMetrics />
+
       {/* My Health Section - only shown when health profile exists */}
       {hasHealthProfile && (
         <motion.div

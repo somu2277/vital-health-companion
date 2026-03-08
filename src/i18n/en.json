@@ -438,5 +438,33 @@
     "carePlanReady": "Care plan generated",
     "dietReady": "Diet plan ready",
     "precautionsReady": "Precautions generated"
+  },
+  "wearable": {
+    "smartwatch": "Smartwatch Connection",
+    "liveMetrics": "Live Health Metrics",
+    "heartRate": "Heart Rate",
+    "steps": "Steps",
+    "sleep": "Sleep",
+    "calories": "Calories",
+    "hours": "hours",
+    "goal": "Goal",
+    "notConnected": "No Smartwatch Connected",
+    "connectDesc": "Connect your smartwatch to sync real-time health metrics",
+    "connectSmartwatch": "Connect Smartwatch",
+    "connected": "Smartwatch connected successfully!",
+    "disconnected": "Smartwatch disconnected",
+    "disconnect": "Disconnect",
+    "statusConnected": "Smartwatch Connected",
+    "statusDisconnected": "Not Connected",
+    "syncingData": "Health data syncing every 5 minutes",
+    "sync": "Sync Now",
+    "aiInsights": "AI Insights",
+    "hrWarning": "Heart rate elevated",
+    "sleepWarning": "Below recommended sleep",
+    "alerts": {
+      "highHR": "High heart rate detected",
+      "lowSleep": "Low sleep duration",
+      "lowActivity": "Low daily activity"
+    }
   }
 }
