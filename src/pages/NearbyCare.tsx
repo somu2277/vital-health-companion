@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import { MapPin, Building2, Stethoscope, Pill, Loader2, Navigation, Phone, Search } from "lucide-react";
+import { MapPin, Building2, Stethoscope, Pill, Loader2, Navigation, Phone, Search, X, Clock, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
-import type { MapPlace } from "@/components/maps/LeafletMap";
+import type { MapPlace, RouteInfo } from "@/components/maps/LeafletMap";
 
 const LeafletMap = lazy(() => import("@/components/maps/LeafletMap"));
 
@@ -22,6 +22,42 @@ const SPECIALTY_TAGS: Record<string, string[]> = {
   generalMedicine: ["general", "general_practice", "gp"],
 };
 
+async function fetchRoute(from: [number, number], to: [number, number]): Promise<RouteInfo | null> {
+  try {
+    const res = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`
+    );
+    const data = await res.json();
+    if (data.routes && data.routes.length > 0) {
+      const route = data.routes[0];
+      const coords: [number, number][] = route.geometry.coordinates.map(
+        (c: [number, number]) => [c[1], c[0]] // GeoJSON is [lng, lat], Leaflet needs [lat, lng]
+      );
+      return {
+        coordinates: coords,
+        distance: route.distance,
+        duration: route.duration,
+        destinationName: "",
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function formatDistance(meters: number): string {
+  return meters >= 1000 ? `${(meters / 1000).toFixed(1)} km` : `${Math.round(meters)} m`;
+}
+
+function formatDuration(seconds: number): string {
+  const mins = Math.round(seconds / 60);
+  if (mins < 60) return `${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  const remainMins = mins % 60;
+  return `${hrs}h ${remainMins}m`;
+}
+
 export default function NearbyCare() {
   const [position, setPosition] = useState<[number, number]>([28.6139, 77.2090]);
   const [places, setPlaces] = useState<MapPlace[]>([]);
@@ -31,10 +67,15 @@ export default function NearbyCare() {
   const [located, setLocated] = useState(false);
   const [manualLocation, setManualLocation] = useState("");
   const [geocoding, setGeocoding] = useState(false);
+  const [route, setRoute] = useState<RouteInfo | null>(null);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<MapPlace | null>(null);
   const { t } = useI18n();
 
   const fetchNearby = useCallback(async (lat: number, lon: number) => {
     setLoading(true);
+    setRoute(null);
+    setSelectedPlace(null);
     try {
       const radius = 5000;
       const query = `
@@ -118,12 +159,26 @@ export default function NearbyCare() {
     }
   };
 
+  const navigateToPlace = async (place: MapPlace) => {
+    setRouteLoading(true);
+    setSelectedPlace(place);
+    const routeData = await fetchRoute(position, [place.lat, place.lon]);
+    if (routeData) {
+      setRoute({ ...routeData, destinationName: place.name });
+    } else {
+      toast.error("Could not calculate route");
+    }
+    setRouteLoading(false);
+  };
+
+  const clearRoute = () => {
+    setRoute(null);
+    setSelectedPlace(null);
+  };
+
   useEffect(() => { autoDetect(); }, []);
 
-  // Filter by facility type
   const typeFiltered = filter === "all" ? places : places.filter(p => p.type === filter);
-
-  // Filter by specialty using tags
   const filtered = specialty === "all"
     ? typeFiltered
     : typeFiltered.filter(p => {
@@ -137,33 +192,50 @@ export default function NearbyCare() {
   const clinics = filtered.filter(p => p.type === "clinic");
   const pharmacies = filtered.filter(p => p.type === "pharmacy");
 
-  const PlaceCard = ({ place }: { place: MapPlace }) => (
-    <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-background hover:bg-accent/30 transition-colors">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-        place.type === "hospital" ? "bg-destructive/10 text-destructive" :
-        place.type === "clinic" ? "bg-primary/10 text-primary" : "bg-primary/10 text-primary"
+  const PlaceCard = ({ place }: { place: MapPlace }) => {
+    const isSelected = selectedPlace?.id === place.id;
+    return (
+      <div className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+        isSelected ? "border-primary bg-primary/5" : "border-border bg-background hover:bg-accent/30"
       }`}>
-        {place.type === "hospital" ? <Building2 className="h-4 w-4" /> :
-         place.type === "clinic" ? <Stethoscope className="h-4 w-4" /> : <Pill className="h-4 w-4" />}
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+          place.type === "hospital" ? "bg-destructive/10 text-destructive" :
+          place.type === "clinic" ? "bg-primary/10 text-primary" : "bg-primary/10 text-primary"
+        }`}>
+          {place.type === "hospital" ? <Building2 className="h-4 w-4" /> :
+           place.type === "clinic" ? <Stethoscope className="h-4 w-4" /> : <Pill className="h-4 w-4" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm truncate">{place.name}</p>
+          <p className="text-xs text-muted-foreground capitalize">{place.type}</p>
+          {place.tags?.["healthcare:speciality"] && (
+            <p className="text-xs text-primary capitalize mt-0.5">{place.tags["healthcare:speciality"]}</p>
+          )}
+          {place.tags?.phone && (
+            <a href={`tel:${place.tags.phone}`} className="text-xs text-primary flex items-center gap-1 mt-1">
+              <Phone className="h-3 w-3" /> {place.tags.phone}
+            </a>
+          )}
+        </div>
+        <Button
+          size="sm"
+          variant={isSelected ? "default" : "outline"}
+          className="gap-1 shrink-0 text-xs"
+          disabled={routeLoading}
+          onClick={() => isSelected ? clearRoute() : navigateToPlace(place)}
+        >
+          {routeLoading && selectedPlace?.id === place.id ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : isSelected ? (
+            <X className="h-3 w-3" />
+          ) : (
+            <Navigation className="h-3 w-3" />
+          )}
+          {isSelected ? "Close" : "Navigate"}
+        </Button>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm truncate">{place.name}</p>
-        <p className="text-xs text-muted-foreground capitalize">{place.type}</p>
-        {place.tags?.["healthcare:speciality"] && (
-          <p className="text-xs text-primary capitalize mt-0.5">{place.tags["healthcare:speciality"]}</p>
-        )}
-        {place.tags?.phone && (
-          <a href={`tel:${place.tags.phone}`} className="text-xs text-primary flex items-center gap-1 mt-1">
-            <Phone className="h-3 w-3" /> {place.tags.phone}
-          </a>
-        )}
-      </div>
-      <a href={`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}`} target="_blank" rel="noopener noreferrer"
-        className="p-1.5 rounded hover:bg-accent transition-colors shrink-0">
-        <Navigation className="h-3.5 w-3.5 text-muted-foreground" />
-      </a>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -209,6 +281,31 @@ export default function NearbyCare() {
         </div>
       </div>
 
+      {/* Route Info Banner */}
+      {route && (
+        <div className="border border-primary/30 rounded-xl p-4 bg-primary/5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Route className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Navigating to {route.destinationName}</p>
+              <div className="flex items-center gap-3 mt-0.5">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Navigation className="h-3 w-3" /> {formatDistance(route.distance)}
+                </span>
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" /> {formatDuration(route.duration)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={clearRoute} className="gap-1">
+            <X className="h-3 w-3" /> Close
+          </Button>
+        </div>
+      )}
+
       {/* Filters Row */}
       <div className="flex flex-wrap gap-3 items-center">
         <Select value={filter} onValueChange={setFilter}>
@@ -251,7 +348,12 @@ export default function NearbyCare() {
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="border border-border rounded-xl overflow-hidden bg-card min-h-[400px]">
           <Suspense fallback={<div className="h-[400px] flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
-            <LeafletMap position={position} places={filtered} />
+            <LeafletMap
+              position={position}
+              places={filtered}
+              route={route}
+              onMarkerClick={navigateToPlace}
+            />
           </Suspense>
         </div>
 
