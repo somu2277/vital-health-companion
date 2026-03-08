@@ -42,13 +42,6 @@ export default function Dashboard() {
     },
   });
 
-  const { data: notifications } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: async () => {
-      const { data } = await supabase.from("notifications").select("*").eq("status", "active").order("created_at", { ascending: false }).limit(10);
-      return data || [];
-    },
-  });
 
   const { data: healthProfile } = useQuery({
     queryKey: ["health-profile"],
