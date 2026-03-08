@@ -1,11 +1,25 @@
 import { Link, useLocation } from "react-router-dom";
-import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings, X } from "lucide-react";
+import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings, X, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/hooks/useI18n";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function DashboardSidebar({ onClose }: { onClose?: () => void }) {
   const location = useLocation();
   const { t } = useI18n();
+
+  // Check if user has any prescriptions uploaded
+  const { data: hasPrescriptions } = useQuery({
+    queryKey: ["has-prescriptions"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("medical_reports")
+        .select("*", { count: "exact", head: true });
+      return (count || 0) > 0;
+    },
+  });
 
   const coreLinks = [
     { to: "/dashboard", icon: LayoutDashboard, label: t("nav.dashboard") },
@@ -26,8 +40,26 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
     { to: "/precautions", icon: AlertTriangle, label: t("nav.precautions") },
   ];
 
-  const NavItem = ({ to, icon: Icon, label }: { to: string; icon: React.ElementType; label: string }) => {
+  const NavItem = ({ to, icon: Icon, label, disabled }: { to: string; icon: React.ElementType; label: string; disabled?: boolean }) => {
     const isActive = location.pathname === to;
+
+    if (disabled) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-sidebar-foreground/40 cursor-not-allowed">
+              <Icon className="h-[18px] w-[18px]" />
+              <span className="flex-1">{label}</span>
+              <Lock className="h-3 w-3" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p className="text-xs">{t("nav.uploadFirst")}</p>
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
     return (
       <Link
         to={to}
@@ -65,8 +97,10 @@ export default function DashboardSidebar({ onClose }: { onClose?: () => void }) 
         <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted px-4 mb-2">{t("nav.core")}</p>
         {coreLinks.map(link => <NavItem key={link.to} {...link} />)}
 
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted px-4 mt-6 mb-2">{t("nav.myHealth")}</p>
-        {healthLinks.map(link => <NavItem key={link.to} {...link} />)}
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted px-4 mt-6 mb-2">
+          {t("nav.myHealth")} {!hasPrescriptions && <Lock className="h-3 w-3 inline ml-1" />}
+        </p>
+        {healthLinks.map(link => <NavItem key={link.to} {...link} disabled={!hasPrescriptions} />)}
       </nav>
 
       <div className="px-3 pb-4">

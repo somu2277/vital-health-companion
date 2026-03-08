@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Upload, FileText, Camera, Type, LinkIcon, X, CheckCircle, Loader2 } from "lucide-react";
+import { Upload, FileText, Camera, Type, LinkIcon, X, CheckCircle, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
@@ -9,12 +9,16 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
+import MedicineConfirmation, { type ExtractedMedicine } from "@/components/MedicineConfirmation";
 
 type AnalysisResult = {
   disease?: string;
-  medicines?: { name: string; dosage: string; frequency: string; duration: string }[];
+  medicines?: ExtractedMedicine[];
   summary?: string;
   report_type?: string;
+  warnings?: string[];
+  diet_recommendations?: string[];
+  contraindications?: string[];
 };
 
 async function runOCR(file: File): Promise<string> {
@@ -32,11 +36,15 @@ export default function UploadReports() {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<AnalysisResult | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | undefined>();
   const [textInput, setTextInput] = useState("");
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+
+  const langMap: Record<string, string> = { en: "English", te: "Telugu", hi: "Hindi" };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -50,35 +58,25 @@ export default function UploadReports() {
 
   const removeFile = (index: number) => setFiles(prev => prev.filter((_, i) => i !== index));
 
-  const processReport = async (reportText: string, fileUrl?: string) => {
+  const saveConfirmedMedicines = async (medicines: ExtractedMedicine[], analysisResult: AnalysisResult, savedFileUrl?: string) => {
     if (!user) return;
 
-    setStatus(t("upload.analyzingDoc"));
-    setProgress(60);
-
-    const { data: aiResult, error: aiError } = await supabase.functions.invoke("ai-health", {
-      body: { action: "analyze-report", data: { reportText } },
-    });
-
-    if (aiError || aiResult?.error) {
-      toast.error(aiResult?.error || "AI analysis failed");
-      setUploading(false);
-      return;
-    }
-
+    setUploading(true);
     setProgress(80);
     setStatus(t("upload.savingResults"));
 
+    // Save report
     await supabase.from("medical_reports").insert({
       user_id: user.id,
-      file_url: fileUrl || null,
-      report_text: reportText,
-      report_type: aiResult.report_type || "other",
-      summary: aiResult.summary || "",
+      file_url: savedFileUrl || null,
+      report_text: textInput || "file upload",
+      report_type: analysisResult.report_type || "other",
+      summary: analysisResult.summary || "",
     });
 
-    if (aiResult.medicines?.length) {
-      const medsToInsert = aiResult.medicines.map((m: any) => ({
+    // Save confirmed medicines
+    if (medicines.length > 0) {
+      const medsToInsert = medicines.map(m => ({
         user_id: user.id,
         name: m.name,
         dosage: m.dosage,
@@ -88,33 +86,119 @@ export default function UploadReports() {
       }));
       await supabase.from("medicines").insert(medsToInsert);
 
-      for (const m of aiResult.medicines) {
-        await supabase.from("notifications").insert({
-          user_id: user.id,
-          type: "medicine_reminder",
-          message: `Take ${m.name} (${m.dosage}) - ${m.frequency}`,
-          status: "active",
+      // Generate smart reminders via AI
+      try {
+        const { data: reminderData } = await supabase.functions.invoke("ai-health", {
+          body: {
+            action: "generate-reminders",
+            data: { medicines: medicines.map(m => ({ name: m.name, dosage: m.dosage, frequency: m.frequency })) },
+          },
         });
+
+        if (reminderData?.reminders) {
+          for (const reminder of reminderData.reminders) {
+            if (reminder.type === "as_needed") {
+              await supabase.from("notifications").insert({
+                user_id: user.id,
+                type: "medicine_reminder",
+                message: `💊 ${reminder.medicine_name} (${reminder.dosage}) - Take as needed${reminder.instruction ? ` · ${reminder.instruction}` : ""}`,
+                status: "active",
+              });
+            } else {
+              for (const time of reminder.times || []) {
+                await supabase.from("notifications").insert({
+                  user_id: user.id,
+                  type: "medicine_reminder",
+                  message: `⏰ ${time} - ${reminder.medicine_name} (${reminder.dosage})${reminder.instruction ? ` · ${reminder.instruction}` : ""}`,
+                  status: "active",
+                  schedule_time: time,
+                });
+              }
+            }
+          }
+        }
+      } catch {
+        // Fallback: create basic reminders
+        for (const m of medicines) {
+          await supabase.from("notifications").insert({
+            user_id: user.id,
+            type: "medicine_reminder",
+            message: `💊 Take ${m.name} (${m.dosage}) - ${m.frequency}`,
+            status: "active",
+          });
+        }
       }
     }
 
-    if (aiResult.disease) {
+    // Save disease stage if detected
+    if (analysisResult.disease) {
       await supabase.from("disease_stages").insert({
         user_id: user.id,
-        disease: aiResult.disease,
-        stage: t("diseaseStage.pendingAnalysis"),
+        disease: analysisResult.disease,
+        stage: "Pending analysis",
         confidence: 0,
       });
     }
 
+    // Save precautions from warnings/contraindications
+    const precautions = [
+      ...(analysisResult.warnings || []),
+      ...(analysisResult.contraindications || []),
+    ];
+    if (precautions.length > 0 && analysisResult.disease) {
+      const precautionInserts = precautions.map(p => ({
+        user_id: user.id,
+        precaution: p,
+        disease: analysisResult.disease!,
+      }));
+      await supabase.from("precautions").insert(precautionInserts);
+    }
+
     setProgress(100);
     setStatus(t("upload.complete"));
-    setResult(aiResult);
+    setResult({ ...analysisResult, medicines });
+    setPendingConfirmation(null);
     queryClient.invalidateQueries({ queryKey: ["reports"] });
     queryClient.invalidateQueries({ queryKey: ["medicines"] });
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
     queryClient.invalidateQueries({ queryKey: ["disease-stages"] });
+    queryClient.invalidateQueries({ queryKey: ["precautions"] });
+    queryClient.invalidateQueries({ queryKey: ["has-prescriptions"] });
     toast.success(t("upload.uploadSuccess"));
+    setUploading(false);
+  };
+
+  const processReport = async (reportText: string, savedFileUrl?: string) => {
+    if (!user) return;
+
+    setStatus(t("upload.analyzingDoc"));
+    setProgress(60);
+
+    const { data: aiResult, error: aiError } = await supabase.functions.invoke("ai-health", {
+      body: { action: "analyze-report", data: { reportText, language: langMap[locale] } },
+    });
+
+    if (aiError || aiResult?.error) {
+      toast.error(aiResult?.error || "AI analysis failed");
+      setUploading(false);
+      return;
+    }
+
+    setProgress(75);
+
+    // Check if any medicines need review (confidence < 90%)
+    const needsReview = aiResult.medicines?.some((m: ExtractedMedicine) => m.needs_review || m.confidence < 90);
+
+    if (needsReview && aiResult.medicines?.length > 0) {
+      // Show confirmation UI
+      setFileUrl(savedFileUrl);
+      setPendingConfirmation(aiResult);
+      setUploading(false);
+      setStatus(t("upload.reviewRequired"));
+    } else {
+      // Auto-confirm all medicines
+      await saveConfirmedMedicines(aiResult.medicines || [], aiResult, savedFileUrl);
+    }
   };
 
   const handleUpload = async () => {
@@ -179,6 +263,50 @@ export default function UploadReports() {
     }
   };
 
+  // Medicine confirmation pending
+  if (pendingConfirmation) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">{t("upload.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("upload.reviewExtracted")}</p>
+        </div>
+
+        {pendingConfirmation.summary && (
+          <div className="border border-border rounded-xl p-4 bg-card">
+            <h3 className="font-semibold mb-1">{t("upload.summary")}</h3>
+            <p className="text-sm text-muted-foreground">{pendingConfirmation.summary}</p>
+            {pendingConfirmation.disease && (
+              <p className="text-sm font-medium text-primary mt-2">{t("upload.detectedCondition")}: {pendingConfirmation.disease}</p>
+            )}
+          </div>
+        )}
+
+        {pendingConfirmation.warnings && pendingConfirmation.warnings.length > 0 && (
+          <div className="border border-warning/50 rounded-xl p-4 bg-warning/5">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              <h3 className="font-semibold text-sm">{t("upload.warnings")}</h3>
+            </div>
+            <ul className="space-y-1">
+              {pendingConfirmation.warnings.map((w, i) => (
+                <li key={i} className="text-sm text-muted-foreground">• {w}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="border border-border rounded-xl p-6 bg-card">
+          <MedicineConfirmation
+            medicines={pendingConfirmation.medicines || []}
+            onConfirm={(confirmedMeds) => saveConfirmedMedicines(confirmedMeds, pendingConfirmation, fileUrl)}
+            onCancel={() => { setPendingConfirmation(null); setProgress(0); }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (result) {
     return (
       <div className="max-w-3xl mx-auto space-y-6">
@@ -221,13 +349,40 @@ export default function UploadReports() {
                   <div className="flex items-center gap-3">
                     <span className="text-lg">💊</span>
                     <div>
-                      <p className="font-medium">{m.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{m.name}</p>
+                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-success/10 text-success font-medium">
+                          {m.confidence || 100}%
+                        </span>
+                      </div>
                       <p className="text-xs text-muted-foreground">{m.dosage} · {m.frequency}</p>
                     </div>
                   </div>
                   <span className="text-xs px-2 py-1 rounded-full bg-accent font-medium">{m.duration}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {result.diet_recommendations && result.diet_recommendations.length > 0 && (
+            <div className="mb-4 p-3 rounded-lg border border-border bg-background">
+              <h3 className="font-semibold mb-2">🥗 {t("carePlan.diet")}</h3>
+              <ul className="space-y-1">
+                {result.diet_recommendations.map((d, i) => (
+                  <li key={i} className="text-sm text-muted-foreground">• {d}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {result.warnings && result.warnings.length > 0 && (
+            <div className="mb-4 p-3 rounded-lg border border-warning/50 bg-warning/5">
+              <h3 className="font-semibold mb-2 text-warning">⚠️ {t("upload.warnings")}</h3>
+              <ul className="space-y-1">
+                {result.warnings.map((w, i) => (
+                  <li key={i} className="text-sm text-muted-foreground">• {w}</li>
+                ))}
+              </ul>
             </div>
           )}
 

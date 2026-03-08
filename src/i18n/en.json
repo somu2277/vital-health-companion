@@ -15,6 +15,7 @@
     "unavailable": "Unavailable",
     "from": "From",
     "for": "For",
+    "confirm": "Confirm",
     "disclaimer": "This is for informational purposes only. Please consult a licensed healthcare professional for medical advice.",
     "notDiagnosis": "This is NOT a medical diagnosis. Always consult a healthcare professional.",
     "consultDoctor": "This is for awareness only. Please consult a licensed doctor.",
@@ -38,7 +39,8 @@
     "diseaseStage": "Disease Stage",
     "carePlan": "Care Plan",
     "precautions": "Precautions",
-    "settings": "Settings"
+    "settings": "Settings",
+    "uploadFirst": "Upload a prescription first to unlock this section"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -118,7 +120,17 @@
     "file": "File",
     "camera": "Camera",
     "text": "Text",
-    "link": "Link"
+    "link": "Link",
+    "confirmMedicines": "Confirm Extracted Medicines",
+    "reviewExtracted": "Review and confirm the medicines extracted from your prescription",
+    "needsReview": "Needs Review",
+    "medicineName": "Medicine Name",
+    "dosageLabel": "Dosage",
+    "frequencyLabel": "Frequency",
+    "durationLabel": "Duration",
+    "confirmAll": "Confirm All",
+    "reviewRequired": "Review required - some medicines need confirmation",
+    "warnings": "Warnings"
   },
   "assistant": {
     "title": "AI Health Assistant",
