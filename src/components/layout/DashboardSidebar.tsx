@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings, X, Lock, Siren, Activity, Lightbulb, Zap } from "lucide-react";
+import { Heart, LayoutDashboard, Upload, MessageSquare, Stethoscope, MapPin, Pill, Clock, Search, Shield, HelpCircle, HeartPulse, ClipboardList, AlertTriangle, Settings, X, Lock, Siren, Activity, Lightbulb, Zap, Bell, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/hooks/useI18n";
 import { useQuery } from "@tanstack/react-query";
