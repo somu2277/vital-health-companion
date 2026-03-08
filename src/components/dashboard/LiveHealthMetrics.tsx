@@ -117,8 +117,9 @@ export default function LiveHealthMetrics() {
         <p className="text-sm text-muted-foreground mt-1 mb-4">{t("wearable.connectDesc")}</p>
         <Button onClick={handleConnect} disabled={syncing} className="gap-2">
           {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wifi className="h-4 w-4" />}
-          {t("wearable.connectSmartwatch")}
+          {t("wearable.connectSmartwatch")} (Demo)
         </Button>
+        <p className="text-[10px] text-muted-foreground mt-2">⚠️ This generates simulated data for demo purposes. Real Google Fit integration requires API setup.</p>
       </motion.div>
     );
   }
