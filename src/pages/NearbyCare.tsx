@@ -1,47 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
-import { MapPin, Building2, Stethoscope, Pill, Loader2, Navigation, Phone, ExternalLink } from "lucide-react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { MapPin, Building2, Stethoscope, Pill, Loader2, Navigation, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { toast } from "sonner";
+import type { MapPlace } from "@/components/maps/LeafletMap";
 
-// Fix default marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-});
-
-const createColorIcon = (color: string) =>
-  new L.DivIcon({
-    html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,.3)"></div>`,
-    className: "",
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-  });
-
-const icons = {
-  hospital: createColorIcon("#ef4444"),
-  clinic: createColorIcon("#3b82f6"),
-  pharmacy: createColorIcon("#22c55e"),
-  user: createColorIcon("#8b5cf6"),
-};
-
-type Place = { id: number; lat: number; lon: number; name: string; type: "hospital" | "clinic" | "pharmacy"; tags: Record<string, string> };
-
-function FlyTo({ center }: { center: [number, number] }) {
-  const map = useMap();
-  useEffect(() => { map.flyTo(center, 14); }, [center, map]);
-  return null;
-}
+const LeafletMap = lazy(() => import("@/components/maps/LeafletMap"));
 
 export default function NearbyCare() {
-  const [position, setPosition] = useState<[number, number]>([28.6139, 77.2090]); // Default Delhi
-  const [places, setPlaces] = useState<Place[]>([]);
+  const [position, setPosition] = useState<[number, number]>([28.6139, 77.2090]);
+  const [places, setPlaces] = useState<MapPlace[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("all");
   const [located, setLocated] = useState(false);
@@ -65,7 +34,7 @@ export default function NearbyCare() {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
       const data = await res.json();
-      const mapped: Place[] = (data.elements || []).map((el: any) => ({
+      const mapped: MapPlace[] = (data.elements || []).map((el: any) => ({
         id: el.id,
         lat: el.lat,
         lon: el.lon,
@@ -108,11 +77,11 @@ export default function NearbyCare() {
   const clinics = places.filter(p => p.type === "clinic");
   const pharmacies = places.filter(p => p.type === "pharmacy");
 
-  const PlaceCard = ({ place }: { place: Place }) => (
+  const PlaceCard = ({ place }: { place: MapPlace }) => (
     <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-background hover:bg-accent/30 transition-colors">
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
         place.type === "hospital" ? "bg-destructive/10 text-destructive" :
-        place.type === "clinic" ? "bg-info/10 text-info" : "bg-success/10 text-success"
+        place.type === "clinic" ? "bg-primary/10 text-primary" : "bg-primary/10 text-primary"
       }`}>
         {place.type === "hospital" ? <Building2 className="h-4 w-4" /> :
          place.type === "clinic" ? <Stethoscope className="h-4 w-4" /> : <Pill className="h-4 w-4" />}
@@ -164,25 +133,9 @@ export default function NearbyCare() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="border border-border rounded-xl overflow-hidden bg-card min-h-[400px]">
-          <MapContainer center={position} zoom={14} className="h-[400px] w-full z-0">
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <FlyTo center={position} />
-            <Marker position={position} icon={icons.user}>
-              <Popup>Your Location</Popup>
-            </Marker>
-            {filtered.map(p => (
-              <Marker key={p.id} position={[p.lat, p.lon]} icon={icons[p.type]}>
-                <Popup>
-                  <strong>{p.name}</strong><br />
-                  <span className="capitalize">{p.type}</span>
-                  {p.tags?.phone && <><br />{p.tags.phone}</>}
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+          <Suspense fallback={<div className="h-[400px] flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+            <LeafletMap position={position} places={filtered} />
+          </Suspense>
         </div>
 
         <div>
