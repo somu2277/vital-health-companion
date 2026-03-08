@@ -81,7 +81,27 @@ Return ONLY valid JSON:
   "diet_recommendations": ["disease-specific diet suggestions based on medicines"],
   "contraindications": ["things to avoid based on prescribed medicines"]
 }`;
-        const text = await aiCall(systemPrompt, data.reportText);
+        // Build user message - support both text and image input
+        let userMessage: string | object[];
+        if (data.imageBase64) {
+          // Vision-based analysis: send image directly to Gemini
+          userMessage = [
+            {
+              type: "text",
+              text: data.reportText
+                ? `Here is the OCR-extracted text for reference (may contain errors):\n${data.reportText}\n\nPlease analyze the prescription IMAGE directly for accurate medicine extraction. Cross-reference with the OCR text but trust the image more.`
+                : "Please analyze this prescription image and extract all medicines accurately.",
+            },
+            {
+              type: "image_url",
+              image_url: { url: `data:${data.imageMimeType || "image/jpeg"};base64,${data.imageBase64}` },
+            },
+          ];
+        } else {
+          userMessage = data.reportText;
+        }
+
+        const text = await aiCall(systemPrompt, userMessage);
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         result = jsonMatch ? JSON.parse(jsonMatch[0]) : { error: "Could not parse AI response" };
         break;
