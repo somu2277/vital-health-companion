@@ -4,17 +4,20 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/hooks/useI18n";
 import ReactMarkdown from "react-markdown";
 
 type Message = { role: "user" | "assistant"; content: string };
-const suggestions = ["What causes headaches?", "Diabetes symptoms", "Blood pressure tips"];
 
 export default function AIAssistant() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const { profile } = useAuth();
+  const { t, language } = useI18n();
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const suggestions = [t("assistant.suggestion1"), t("assistant.suggestion2"), t("assistant.suggestion3")];
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -29,13 +32,13 @@ export default function AIAssistant() {
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-health", {
-        body: { action: "chat", data: { message: msg } },
+        body: { action: "chat", data: { message: msg, language } },
       });
 
-      const reply = data?.response || data?.error || "Sorry, something went wrong.";
+      const reply = data?.response || data?.error || t("assistant.failed");
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "Failed to get response. Please try again." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: t("assistant.failed") }]);
     } finally {
       setLoading(false);
     }
@@ -44,8 +47,8 @@ export default function AIAssistant() {
   return (
     <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
       <div>
-        <h1 className="text-3xl font-bold">AI Health Assistant</h1>
-        <p className="text-muted-foreground">Ask any health-related question</p>
+        <h1 className="text-3xl font-bold">{t("assistant.title")}</h1>
+        <p className="text-muted-foreground">{t("assistant.description")}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto py-6">
@@ -54,8 +57,8 @@ export default function AIAssistant() {
             <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mb-4">
               <Bot className="h-8 w-8 text-primary" />
             </div>
-            <p className="text-lg font-semibold">Hello, {profile?.name || "there"}! 👋</p>
-            <p className="text-muted-foreground mt-1">I can only help with medical and health-related questions.</p>
+            <p className="text-lg font-semibold">{t("assistant.hello")}, {profile?.name || "there"}! 👋</p>
+            <p className="text-muted-foreground mt-1">{t("assistant.onlyHealth")}</p>
             <div className="flex gap-2 mt-6 flex-wrap justify-center">
               {suggestions.map(s => (
                 <button key={s} onClick={() => sendMessage(s)}
@@ -93,7 +96,7 @@ export default function AIAssistant() {
 
       <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 text-sm mb-3">
         <AlertCircle className="h-4 w-4 text-warning shrink-0" />
-        This is for awareness only. Please consult a licensed doctor.
+        {t("common.consultDoctor")}
       </div>
 
       <div className="flex items-center gap-2 border border-border rounded-xl p-2 bg-card">
@@ -102,7 +105,7 @@ export default function AIAssistant() {
         </button>
         <input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === "Enter" && sendMessage()}
-          placeholder="Type your health question..." className="flex-1 bg-transparent outline-none text-sm" />
+          placeholder={t("assistant.placeholder")} className="flex-1 bg-transparent outline-none text-sm" />
         <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || loading}>
           <Send className="h-4 w-4" />
         </Button>

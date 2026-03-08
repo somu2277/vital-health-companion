@@ -120,7 +120,8 @@ serve(async (req) => {
       }
 
       case "chat": {
-        const systemPrompt = `You are a helpful AI health assistant called VitalWave AI. You can only help with medical and health-related questions. If asked about non-health topics, politely redirect. Keep answers clear, concise, and always include a disclaimer to consult a doctor. Format responses in markdown.`;
+        const lang = data.language || "English";
+        const systemPrompt = `You are a helpful AI health assistant called VitalWave AI. You can only help with medical and health-related questions. If asked about non-health topics, politely redirect. Keep answers clear, concise, and always include a disclaimer to consult a doctor. Format responses in markdown. IMPORTANT: Respond in ${lang} language.`;
         const text = await aiCall(systemPrompt, data.message);
         result = { response: text };
         break;

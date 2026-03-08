@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/hooks/useI18n";
 import { toast } from "sonner";
 
 export default function AuthPage() {
@@ -14,6 +15,7 @@ export default function AuthPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,7 +27,7 @@ export default function AuthPage() {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("Welcome back!");
+        toast.success(t("auth.welcomeToast"));
         navigate("/dashboard");
       }
     } else {
@@ -33,7 +35,7 @@ export default function AuthPage() {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("Account created! Check your email to confirm.");
+        toast.success(t("auth.accountCreated"));
         navigate("/dashboard");
       }
     }
@@ -48,36 +50,36 @@ export default function AuthPage() {
             <Heart className="h-8 w-8 text-primary fill-primary" />
             <span className="text-2xl font-bold">Vital<span className="text-primary">Wave</span></span>
           </Link>
-          <h1 className="text-2xl font-bold">{isLogin ? "Welcome back" : "Create your account"}</h1>
+          <h1 className="text-2xl font-bold">{isLogin ? t("auth.welcomeBack") : t("auth.createAccount")}</h1>
           <p className="text-muted-foreground mt-1">
-            {isLogin ? "Sign in to your account" : "Start your health journey"}
+            {isLogin ? t("auth.signIn") : t("auth.startJourney")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 border border-border rounded-xl p-6 bg-card">
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t("auth.fullName")}</Label>
               <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" required />
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("auth.email")}</Label>
             <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("auth.password")}</Label>
             <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+            {loading ? t("common.pleaseWait") : isLogin ? t("auth.signInBtn") : t("auth.createAccountBtn")}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+          {isLogin ? t("auth.noAccount") : t("auth.hasAccount")}{" "}
           <button onClick={() => setIsLogin(!isLogin)} className="text-primary font-medium hover:underline">
-            {isLogin ? "Sign up" : "Sign in"}
+            {isLogin ? t("auth.signUp") : t("auth.signInLink")}
           </button>
         </p>
       </div>
