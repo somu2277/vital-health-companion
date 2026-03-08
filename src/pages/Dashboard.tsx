@@ -282,36 +282,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="border border-border rounded-xl p-6 bg-card">
-            <div className="flex items-center gap-2 mb-4">
-              <Bell className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">{t("dashboard.quickReminders")}</h2>
-            </div>
-
-            {notifications && notifications.length > 0 && (
-              <div className="space-y-2 mb-4">
-                {notifications.slice(0, 3).map(n => (
-                  <div key={n.id} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background text-sm">
-                    <Bell className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate">{n.message}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {defaultReminders.map(r => (
-                <button
-                  key={r.type}
-                  onClick={() => addReminder(r.type, r.message)}
-                  className="flex items-center gap-2 w-full p-2 rounded-lg border border-dashed border-border hover:bg-accent/30 transition-colors text-sm text-muted-foreground"
-                >
-                  <r.icon className={`h-3.5 w-3.5 ${r.color} shrink-0`} />
-                  <span className="truncate">+ {r.message}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <QuickReminders />
         </div>
       </div>
     </div>

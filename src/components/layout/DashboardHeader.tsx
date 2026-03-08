@@ -29,6 +29,7 @@ export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => v
       <button onClick={toggle} className="p-2 rounded-lg hover:bg-accent transition-colors" aria-label="Toggle dark mode">
         {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
       </button>
+      <NotificationBell />
       <button className="p-2 rounded-lg hover:bg-accent transition-colors">
         <MessageSquare className="h-4 w-4 text-muted-foreground" />
       </button>
