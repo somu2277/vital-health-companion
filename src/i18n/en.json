@@ -97,7 +97,11 @@
     "drinkWater": "Drink a glass of water",
     "sleepReminder": "Time to prepare for bed",
     "walkReminder": "Take a 10-minute walk",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "noHealthData": "No Health Data Yet",
+    "uploadToUnlock": "Upload a prescription to unlock your personalized My Health dashboard with disease staging, care plans, diet recommendations, and precautions.",
+    "viewFull": "View full details",
+    "dietPlan": "Diet Plan"
   },
   "upload": {
     "title": "Upload Medical Documents",
