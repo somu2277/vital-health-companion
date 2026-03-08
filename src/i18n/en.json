@@ -466,5 +466,18 @@
       "lowSleep": "Low sleep duration",
       "lowActivity": "Low daily activity"
     }
+  },
+  "reminders": {
+    "notifications": "Notifications",
+    "activeReminders": "Your active reminders",
+    "noReminders": "No active reminders",
+    "completed": "Reminder completed!",
+    "added": "Reminder added!",
+    "auto": "Auto",
+    "manual": "Manual",
+    "water": "Hydration",
+    "medicine": "Medicine",
+    "sleep": "Sleep",
+    "activity": "Activity"
   }
 }
