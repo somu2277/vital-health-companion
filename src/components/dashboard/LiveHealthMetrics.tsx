@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { Heart, Footprints, Moon, Flame, AlertTriangle, Loader2, Lightbulb, TrendingUp, Trophy, Wifi, WifiOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, Footprints, Moon, Flame, AlertTriangle, Loader2, Lightbulb, TrendingUp, Trophy, Wifi, WifiOff, Watch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/hooks/useI18n";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 
 type WearableData = {
   heart_rate: number;
@@ -28,8 +29,25 @@ export default function LiveHealthMetrics() {
   const { t, language } = useI18n();
   const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [insights, setInsights] = useState<Insight[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Handle Google Fit OAuth callback params
+  useEffect(() => {
+    if (searchParams.get("gfit_connected") === "true") {
+      toast.success(t("wearable.connected"));
+      queryClient.invalidateQueries({ queryKey: ["wearable-data"] });
+      searchParams.delete("gfit_connected");
+      setSearchParams(searchParams, { replace: true });
+    }
+    if (searchParams.get("gfit_error")) {
+      toast.error(`Google Fit connection failed: ${searchParams.get("gfit_error")}`);
+      searchParams.delete("gfit_error");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams]);
 
   const { data: wearableResult, isLoading } = useQuery({
     queryKey: ["wearable-data"],
@@ -38,15 +56,39 @@ export default function LiveHealthMetrics() {
         body: { action: "get-latest", data: {} },
       });
       if (error) throw error;
-      return data as { connected: boolean; data: WearableData | null };
+      return data as { connected: boolean; source?: string; data: WearableData | null };
     },
-    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    refetchInterval: 60 * 1000, // Refresh every 60 seconds
   });
 
   const connected = wearableResult?.connected;
   const metrics = wearableResult?.data;
+  const source = wearableResult?.source || "unknown";
 
-  const handleConnect = async () => {
+  const handleConnectGoogleFit = async () => {
+    setConnecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("wearable-sync", {
+        body: { action: "get-connect-url", data: { redirect: window.location.origin + "/dashboard" } },
+      });
+      if (error) throw error;
+      if (data?.not_configured) {
+        // Fall back to demo mode
+        toast.error("Google Fit API not configured. Using demo mode.");
+        await handleConnectDemo();
+        return;
+      }
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to connect");
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const handleConnectDemo = async () => {
     setSyncing(true);
     try {
       const { error } = await supabase.functions.invoke("wearable-sync", {
@@ -55,6 +97,27 @@ export default function LiveHealthMetrics() {
       if (error) throw error;
       await queryClient.invalidateQueries({ queryKey: ["wearable-data"] });
       toast.success(t("wearable.connected"));
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const syncAction = source === "google_fit" ? "sync-googlefit" : "sync-demo";
+      const { data, error } = await supabase.functions.invoke("wearable-sync", {
+        body: { action: syncAction, data: {} },
+      });
+      if (error) throw error;
+      if (data?.reconnect) {
+        toast.error("Google Fit session expired. Please reconnect.");
+        return;
+      }
+      await queryClient.invalidateQueries({ queryKey: ["wearable-data"] });
+      toast.success("Data synced!");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -80,10 +143,7 @@ export default function LiveHealthMetrics() {
     setLoadingInsights(true);
     try {
       const { data, error } = await supabase.functions.invoke("wearable-sync", {
-        body: {
-          action: "ai-insights",
-          data: { metrics, language },
-        },
+        body: { action: "ai-insights", data: { metrics, language } },
       });
       if (error) throw error;
       setInsights(data?.insights || []);
@@ -111,21 +171,27 @@ export default function LiveHealthMetrics() {
   if (!connected || !metrics) {
     return (
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        className="border border-dashed border-primary/30 rounded-xl p-6 bg-primary/5 text-center">
-        <WifiOff className="h-10 w-10 mx-auto mb-3 text-primary/40" />
+        className="border border-dashed border-primary/30 rounded-xl p-8 bg-primary/5 text-center">
+        <Watch className="h-12 w-12 mx-auto mb-4 text-primary/40" />
         <h3 className="font-semibold text-lg">{t("wearable.notConnected")}</h3>
-        <p className="text-sm text-muted-foreground mt-1 mb-4">{t("wearable.connectDesc")}</p>
-        <Button onClick={handleConnect} disabled={syncing} className="gap-2">
-          {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wifi className="h-4 w-4" />}
-          {t("wearable.connectSmartwatch")} (Demo)
-        </Button>
-        <p className="text-[10px] text-muted-foreground mt-2">⚠️ This generates simulated data for demo purposes. Real Google Fit integration requires API setup.</p>
+        <p className="text-sm text-muted-foreground mt-1 mb-6">{t("wearable.connectDesc")}</p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button onClick={handleConnectGoogleFit} disabled={connecting || syncing} className="gap-2">
+            {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wifi className="h-4 w-4" />}
+            {t("wearable.connectSmartwatch")}
+          </Button>
+          <Button variant="outline" onClick={handleConnectDemo} disabled={syncing || connecting} className="gap-2 text-xs">
+            {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            Demo Mode
+          </Button>
+        </div>
       </motion.div>
     );
   }
 
   const hrWarning = metrics.heart_rate > 110;
   const sleepWarning = metrics.sleep_hours < 6;
+  const stepsLow = metrics.steps < 4000;
   const stepsGoal = 10000;
   const stepsPercent = Math.min((metrics.steps / stepsGoal) * 100, 100);
 
@@ -135,15 +201,24 @@ export default function LiveHealthMetrics() {
         <div className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-semibold">{t("wearable.liveMetrics")}</h2>
+          {source === "google_fit" && (
+            <span className="text-[10px] bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">Google Fit</span>
+          )}
+          {source === "demo_smartwatch" && (
+            <span className="text-[10px] bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded-full">Demo</span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={fetchInsights} disabled={loadingInsights} className="gap-1 text-xs">
             {loadingInsights ? <Loader2 className="h-3 w-3 animate-spin" /> : <Lightbulb className="h-3 w-3" />}
             {t("wearable.aiInsights")}
           </Button>
-          <Button size="sm" variant="ghost" onClick={handleConnect} disabled={syncing} className="gap-1 text-xs">
+          <Button size="sm" variant="ghost" onClick={handleSync} disabled={syncing} className="gap-1 text-xs">
             {syncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wifi className="h-3 w-3" />}
             {t("wearable.sync")}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={handleDisconnect} className="text-xs text-destructive">
+            <WifiOff className="h-3 w-3" />
           </Button>
         </div>
       </div>
@@ -186,9 +261,9 @@ export default function LiveHealthMetrics() {
         </div>
 
         {/* Steps */}
-        <div className="p-4 rounded-xl border border-border bg-card">
+        <div className={`p-4 rounded-xl border ${stepsLow ? "border-orange-500/30 bg-orange-500/5" : "border-border bg-card"}`}>
           <div className="flex items-center gap-2 mb-2">
-            <Footprints className="h-4 w-4 text-green-500" />
+            <Footprints className={`h-4 w-4 ${stepsLow ? "text-orange-500" : "text-green-500"}`} />
             <span className="text-xs font-medium text-muted-foreground">{t("wearable.steps")}</span>
           </div>
           <p className="text-2xl font-bold">{metrics.steps.toLocaleString()}</p>
@@ -198,6 +273,7 @@ export default function LiveHealthMetrics() {
             </div>
             <p className="text-[10px] text-muted-foreground mt-0.5">{t("wearable.goal")}: {stepsGoal.toLocaleString()}</p>
           </div>
+          {stepsLow && <p className="text-[10px] text-orange-500 mt-1">{t("wearable.alerts.lowActivity")}</p>}
         </div>
 
         {/* Sleep */}
