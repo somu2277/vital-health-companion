@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n, localeNames, type Locale } from "@/hooks/useI18n";
+import NotificationBell from "./NotificationBell";
 
 export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const { profile, signOut } = useAuth();
