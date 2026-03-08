@@ -263,6 +263,39 @@ export type Database = {
         }
         Relationships: []
       }
+      reminders: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          scheduled_time: string
+          source: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          scheduled_time?: string
+          source?: string | null
+          status?: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          scheduled_time?: string
+          source?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       symptoms: {
         Row: {
           created_at: string | null
